@@ -196,7 +196,7 @@ export default async function ProjectDetailPage({ params }: { params: { slug: st
         </section>
       )}
 
-      <div className="h-2" />
+      <div className="h-4" />
 
       {/* 常時表示の支援ボタン */}
       <StickySupport project={project} />
