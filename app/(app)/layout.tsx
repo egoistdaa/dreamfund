@@ -2,7 +2,11 @@ import { Header } from "@/components/layout/Header";
 import { TabBar } from "@/components/layout/TabBar";
 import { AuthGateProvider } from "@/components/auth/AuthGate";
 
-export default function PublicLayout({ children }: { children: React.ReactNode }) {
+/**
+ * ログイン後ページ共通レイアウト。
+ * 公開レイアウトと同じスマホ枠・Header・TabBar・AuthGateProviderを提供する。
+ */
+export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
     <AuthGateProvider>
       <div className="flex min-h-screen justify-center bg-[#EDF1F7] sm:py-6">
