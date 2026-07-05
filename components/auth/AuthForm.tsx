@@ -37,12 +37,22 @@ export function AuthForm({ mode }: { mode: Mode }) {
   const params = useSearchParams();
 
   const redirect = params.get("redirect") || "/mypage";
-  const redirectQuery = `?redirect=${encodeURIComponent(redirect)}`;
-  const confirmed = params.get("confirmed") === "1";
+  const isSignup = mode === "signup";
+
+  const successBanner =
+    params.get("reset") === "1"
+      ? "パスワードを再設定しました。新しいパスワードでログインしてください。"
+      : params.get("confirmed") === "1"
+        ? "メールアドレスの確認が完了しました。ログインしてください。"
+        : null;
+
   const confirmError = params.get("error") === "confirm";
+
+  const redirectQuery = `?redirect=${encodeURIComponent(redirect)}`;
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [sent, setSent] = useState(false);
@@ -67,7 +77,6 @@ export function AuthForm({ mode }: { mode: Mode }) {
     setError(null);
 
     const validationError = validate();
-
     if (validationError) {
       setError(validationError);
       return;
@@ -79,14 +88,9 @@ export function AuthForm({ mode }: { mode: Mode }) {
 
     try {
       if (mode === "signup") {
-        /**
-         * Supabase標準メールテンプレートを使う場合、
-         * 確認リンクはSupabase側で検証されたあと、ここへ戻る。
-         * カスタムSMTP未設定でも自然にログイン画面へ戻せる。
-         */
-        const emailRedirectTo = `${window.location.origin}/login?confirmed=1&redirect=${encodeURIComponent(
-          redirect
-        )}`;
+        const emailRedirectTo = `${
+          window.location.origin
+        }/login?confirmed=1&redirect=${encodeURIComponent(redirect)}`;
 
         const { error } = await supabase.auth.signUp({
           email,
@@ -126,16 +130,22 @@ export function AuthForm({ mode }: { mode: Mode }) {
     return (
       <div className="rounded-card-lg border border-line bg-white p-6 text-center">
         <div className="mb-3 text-4xl">📩</div>
-        <h2 className="mb-2 text-lg font-black">確認メールを送信しました</h2>
+
+        <h2 className="mb-2 text-lg font-black">
+          確認メールを送信しました
+        </h2>
+
         <p className="text-[13px] leading-relaxed text-ink-sub">
-          <span className="font-bold text-ink">{email}</span> 宛に確認メールをお送りしました。
+          <span className="font-bold text-ink">{email}</span>{" "}
+          宛に確認メールをお送りしました。
           <br />
           メール内のリンクを押すと登録が完了します。
           <br />
-          メールが届かない場合は迷惑メールフォルダもご確認ください。
+          （メールが届かない場合は迷惑メールフォルダもご確認ください）
         </p>
+
         <Link
-          href={`/login${redirectQuery}`}
+          href="/login"
           className="mt-5 inline-block text-[13px] font-bold text-primary"
         >
           ログイン画面へ戻る
@@ -144,29 +154,41 @@ export function AuthForm({ mode }: { mode: Mode }) {
     );
   }
 
-  const isSignup = mode === "signup";
-
   return (
-    <form onSubmit={handleSubmit} className="rounded-card-lg border border-line bg-white p-6">
+    <form
+      onSubmit={handleSubmit}
+      className="rounded-card-lg border border-line bg-white p-6"
+    >
+      {successBanner && mode === "login" && (
+        <div className="mb-4 flex items-start gap-2 rounded-lg bg-success/10 px-3 py-2.5 text-[12.5px] font-bold text-success">
+          <svg
+            className="mt-0.5 h-4 w-4 shrink-0"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={2.5}
+          >
+            <path d="M20 6L9 17l-5-5" />
+          </svg>
+          <span>{successBanner}</span>
+        </div>
+      )}
+
+      {confirmError && mode === "login" && (
+        <div className="mb-4 rounded-lg bg-error/10 px-3 py-2.5 text-[12.5px] font-bold text-error">
+          確認リンクの処理に失敗しました。すでに確認済みの場合は、そのままログインできます。
+        </div>
+      )}
+
       <h1 className="mb-1 text-xl font-black tracking-tight">
         {isSignup ? "新規会員登録" : "ログイン"}
       </h1>
 
       <p className="mb-5 text-[12.5px] font-medium text-ink-sub">
-        {isSignup ? "メールアドレスで、夢の応援を始めよう。" : "おかえりなさい。"}
+        {isSignup
+          ? "メールアドレスで、夢の応援を始めよう。"
+          : "おかえりなさい。"}
       </p>
-
-      {confirmed && !isSignup && (
-        <div className="mb-4 rounded-lg bg-success/10 px-3 py-2.5 text-[12.5px] font-bold text-success">
-          メールアドレスの確認が完了しました。ログインしてください。
-        </div>
-      )}
-
-      {confirmError && !isSignup && (
-        <div className="mb-4 rounded-lg bg-warning/10 px-3 py-2.5 text-[12.5px] font-bold text-warning">
-          確認リンクの処理に失敗しました。すでに確認済みの場合は、そのままログインできます。
-        </div>
-      )}
 
       {error && (
         <div className="mb-4 rounded-lg bg-error/10 px-3 py-2.5 text-[12.5px] font-bold text-error">
@@ -174,7 +196,10 @@ export function AuthForm({ mode }: { mode: Mode }) {
         </div>
       )}
 
-      <label className="mb-1 block text-[12px] font-bold text-ink-sub">メールアドレス</label>
+      <label className="mb-1 block text-[12px] font-bold text-ink-sub">
+        メールアドレス
+      </label>
+
       <input
         type="email"
         inputMode="email"
@@ -186,16 +211,29 @@ export function AuthForm({ mode }: { mode: Mode }) {
         disabled={loading}
       />
 
-      <label className="mb-1 block text-[12px] font-bold text-ink-sub">パスワード</label>
+      <label className="mb-1 block text-[12px] font-bold text-ink-sub">
+        パスワード
+      </label>
+
       <input
         type="password"
         autoComplete={isSignup ? "new-password" : "current-password"}
         value={password}
         onChange={(e) => setPassword(e.target.value)}
         placeholder="6文字以上"
-        className="mb-5 w-full rounded-xl border border-line bg-sub px-4 py-3 text-[15px] outline-none focus:border-primary focus:bg-white"
+        className="mb-2 w-full rounded-xl border border-line bg-sub px-4 py-3 text-[15px] outline-none focus:border-primary focus:bg-white"
         disabled={loading}
       />
+
+      {!isSignup && (
+        <div className="mb-5 text-right">
+          <Link href="/forgot-password" className="text-[12px] font-bold text-primary">
+            パスワードを忘れた方
+          </Link>
+        </div>
+      )}
+
+      {isSignup && <div className="mb-3" />}
 
       <button
         type="submit"
@@ -209,14 +247,20 @@ export function AuthForm({ mode }: { mode: Mode }) {
         {isSignup ? (
           <>
             アカウントをお持ちの方は{" "}
-            <Link href={`/login${redirectQuery}`} className="font-bold text-primary">
+            <Link
+              href={`/login${redirectQuery}`}
+              className="font-bold text-primary"
+            >
               ログイン
             </Link>
           </>
         ) : (
           <>
             初めての方は{" "}
-            <Link href={`/signup${redirectQuery}`} className="font-bold text-primary">
+            <Link
+              href={`/signup${redirectQuery}`}
+              className="font-bold text-primary"
+            >
               新規登録
             </Link>
           </>
