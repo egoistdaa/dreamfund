@@ -35,8 +35,11 @@ function toJaError(message: string): string {
 
 export function AuthForm({ mode }: { mode: Mode }) {
   const params = useSearchParams();
+
   const redirect = params.get("redirect") || "/mypage";
   const redirectQuery = `?redirect=${encodeURIComponent(redirect)}`;
+  const confirmed = params.get("confirmed") === "1";
+  const confirmError = params.get("error") === "confirm";
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -76,7 +79,12 @@ export function AuthForm({ mode }: { mode: Mode }) {
 
     try {
       if (mode === "signup") {
-        const emailRedirectTo = `${window.location.origin}/auth/confirm?redirect=${encodeURIComponent(
+        /**
+         * Supabase標準メールテンプレートを使う場合、
+         * 確認リンクはSupabase側で検証されたあと、ここへ戻る。
+         * カスタムSMTP未設定でも自然にログイン画面へ戻せる。
+         */
+        const emailRedirectTo = `${window.location.origin}/login?confirmed=1&redirect=${encodeURIComponent(
           redirect
         )}`;
 
@@ -126,7 +134,10 @@ export function AuthForm({ mode }: { mode: Mode }) {
           <br />
           メールが届かない場合は迷惑メールフォルダもご確認ください。
         </p>
-        <Link href={`/login${redirectQuery}`} className="mt-5 inline-block text-[13px] font-bold text-primary">
+        <Link
+          href={`/login${redirectQuery}`}
+          className="mt-5 inline-block text-[13px] font-bold text-primary"
+        >
           ログイン画面へ戻る
         </Link>
       </div>
@@ -144,6 +155,18 @@ export function AuthForm({ mode }: { mode: Mode }) {
       <p className="mb-5 text-[12.5px] font-medium text-ink-sub">
         {isSignup ? "メールアドレスで、夢の応援を始めよう。" : "おかえりなさい。"}
       </p>
+
+      {confirmed && !isSignup && (
+        <div className="mb-4 rounded-lg bg-success/10 px-3 py-2.5 text-[12.5px] font-bold text-success">
+          メールアドレスの確認が完了しました。ログインしてください。
+        </div>
+      )}
+
+      {confirmError && !isSignup && (
+        <div className="mb-4 rounded-lg bg-warning/10 px-3 py-2.5 text-[12.5px] font-bold text-warning">
+          確認リンクの処理に失敗しました。すでに確認済みの場合は、そのままログインできます。
+        </div>
+      )}
 
       {error && (
         <div className="mb-4 rounded-lg bg-error/10 px-3 py-2.5 text-[12.5px] font-bold text-error">
