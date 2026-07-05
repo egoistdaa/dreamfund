@@ -1,12 +1,10 @@
-import Link from "next/link";
+﻿import Link from "next/link";
 import { requireAuth } from "@/lib/auth/requireAuth";
 import { createServerSupabase } from "@/lib/supabase/server-auth";
 
 export const metadata = {
-  title: "マイページ",
-  robots: {
-    index: false,
-  },
+  title: "\u30de\u30a4\u30da\u30fc\u30b8",
+  robots: { index: false },
 };
 
 export default async function MyPage() {
@@ -26,44 +24,56 @@ export default async function MyPage() {
     bio: string | null;
   } | null;
 
-  const name = profile?.display_name ?? "名称未設定";
+  const name = profile?.display_name ?? "\u540d\u79f0\u672a\u8a2d\u5b9a";
+  const avatarUrl = profile?.avatar_url ?? null;
+
+  const menuItems = [
+    { label: "\u652f\u63f4\u3057\u305f\u30d7\u30ed\u30b8\u30a7\u30af\u30c8", href: "#" },
+    { label: "\u6295\u7a3f\u3057\u305f\u30d7\u30ed\u30b8\u30a7\u30af\u30c8", href: "#" },
+    { label: "\u304a\u6c17\u306b\u5165\u308a", href: "/favorites" },
+    { label: "\u901a\u77e5", href: "#" },
+    { label: "\u8a2d\u5b9a", href: "#" },
+  ];
 
   return (
     <div className="px-[18px] py-6">
-      <div className="mb-6 flex items-center gap-4">
-        <span className="grid h-16 w-16 place-items-center rounded-full bg-brand-135 text-2xl font-black text-white">
-          {name[0] ?? "?"}
-        </span>
+      <div className="mb-4 flex items-center gap-4">
+        {avatarUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={avatarUrl}
+            alt="\u30d7\u30ed\u30d5\u30a3\u30fc\u30eb\u753b\u50cf"
+            className="h-16 w-16 rounded-full object-cover ring-2 ring-line"
+          />
+        ) : (
+          <span className="grid h-16 w-16 place-items-center rounded-full bg-brand-135 text-2xl font-black text-white">
+            {name[0] ?? "?"}
+          </span>
+        )}
 
-        <div className="min-w-0">
+        <div className="min-w-0 flex-1">
           <div className="truncate text-lg font-black">{name}</div>
-          <div className="truncate text-[12.5px] text-ink-sub">{user.email}</div>
+          <div className="truncate text-[12.5px] text-ink-sub">
+            {user.email}
+          </div>
         </div>
       </div>
 
+      {profile?.bio && (
+        <p className="mb-4 whitespace-pre-wrap rounded-card bg-sub px-4 py-3 text-[13px] leading-relaxed">
+          {profile.bio}
+        </p>
+      )}
+
+      <Link
+        href="/mypage/profile"
+        className="mb-6 flex min-h-tap items-center justify-center gap-2 rounded-[14px] bg-primary/10 text-[14px] font-extrabold text-primary ring-1 ring-primary/30 transition active:scale-[.99]"
+      >
+        {"\u30d7\u30ed\u30d5\u30a3\u30fc\u30eb\u3092\u7de8\u96c6"}
+      </Link>
+
       <div className="flex flex-col gap-3">
-        {[
-          {
-            label: "支援したプロジェクト",
-            href: "#",
-          },
-          {
-            label: "投稿したプロジェクト",
-            href: "#",
-          },
-          {
-            label: "お気に入り",
-            href: "/favorites",
-          },
-          {
-            label: "通知",
-            href: "#",
-          },
-          {
-            label: "設定",
-            href: "#",
-          },
-        ].map((item) => (
+        {menuItems.map((item) => (
           <Link
             key={item.label}
             href={item.href}
@@ -88,12 +98,12 @@ export default async function MyPage() {
           type="submit"
           className="w-full rounded-[14px] border border-line py-3.5 text-[14px] font-extrabold text-ink-sub transition active:scale-[.99]"
         >
-          ログアウト
+          {"\u30ed\u30b0\u30a2\u30a6\u30c8"}
         </button>
       </form>
 
       <p className="mt-6 text-center text-[11px] text-ink-sub">
-        支援履歴・投稿・通知は今後のフェーズで実装予定です。
+        {"\u652f\u63f4\u5c65\u6b74\u30fb\u6295\u7a3f\u30fb\u901a\u77e5\u306f\u4eca\u5f8c\u306e\u30d5\u30a7\u30fc\u30ba\u3067\u5b9f\u88c5\u4e88\u5b9a\u3067\u3059\u3002"}
       </p>
     </div>
   );
