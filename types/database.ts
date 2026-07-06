@@ -1,8 +1,6 @@
-/**
- * Supabaseテーブルの型。schema.sql のカラムに対応。
- * supabase-js が型を正しく解決するため、Relationships / Views / Functions /
- * Enums / CompositeTypes も定義している。
- */
+﻿/**
+ * Supabase繝・・繝悶Ν縺ｮ蝙九Ｔchema.sql 縺ｮ繧ｫ繝ｩ繝縺ｫ蟇ｾ蠢懊・ * supabase-js 縺悟梛繧呈ｭ｣縺励￥隗｣豎ｺ縺吶ｋ縺溘ａ縲ヽelationships / Views / Functions /
+ * Enums / CompositeTypes 繧ょｮ夂ｾｩ縺励※縺・ｋ縲・ */
 
 export type ProjectStatusDB =
   | "draft"
@@ -14,6 +12,12 @@ export type ProjectStatusDB =
   | "closed";
 
 export type FundingTypeDB = "all_or_nothing" | "all_in";
+
+export type SubmissionReturn = {
+  title: string;
+  price: number;
+  description: string | null;
+};
 
 export interface Database {
   public: {
@@ -157,6 +161,34 @@ export interface Database {
           user_id?: string;
           project_id?: string;
         };
+        Relationships: [];
+      };
+
+      project_submissions: {
+        Row: {
+          id: string;
+          user_id: string;
+          title: string;
+          category: string;
+          goal_amount: number;
+          summary: string;
+          story: string;
+          returns: SubmissionReturn[];
+          status: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          user_id: string;
+          title: string;
+          category: string;
+          goal_amount: number;
+          summary: string;
+          story: string;
+          returns: SubmissionReturn[];
+          status?: string;
+        };
+        Update: Record<string, unknown>;
         Relationships: [];
       };
     };
