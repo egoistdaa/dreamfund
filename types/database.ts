@@ -174,6 +174,7 @@ export interface Database {
           summary: string;
           story: string;
           returns: SubmissionReturn[];
+          cover_image_url: string | null;
           status: string;
           created_at: string;
           updated_at: string;
@@ -186,6 +187,7 @@ export interface Database {
           summary: string;
           story: string;
           returns: SubmissionReturn[];
+          cover_image_url?: string | null;
           status?: string;
         };
         Update: Record<string, unknown>;

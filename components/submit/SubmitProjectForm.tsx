@@ -1,9 +1,24 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import Link from "next/link";
 import { submitProject } from "@/lib/data/projectSubmissions";
+import {
+  uploadSubmissionCover,
+  validateSubmissionImage,
+} from "@/lib/storage/submissionImage";
 import { CATEGORIES } from "@/lib/data/projects";
+
+/**
+ * 夢の投稿フォーム（第一段階）。
+ * - メイン画像（任意・1枚）/ タイトル / カテゴリ / 目標金額 / 概要文 / 本文 / リターン（可変・最大5）
+ * - リターンは初期1つ、「リターンを追加」で最大5つ。2つ目以降のみ削除可。
+ * - 画像は選択時プレビュー、送信時に submissions バケットへアップロードして
+ *   cover_image_url に保存。画像なしでも投稿可（任意）。
+ * - 日本語エラー、送信中はボタン無効化（二重送信防止）。
+ * - 保存後は完了画面（/mypage 導線）を表示。
+ * - 公開一覧反映は今回は対象外。project_submissions に申請保存のみ。
+ */
 
 const RETURNS_MAX = 5;
 
@@ -19,18 +34,46 @@ export function SubmitProjectForm() {
   const [goalAmount, setGoalAmount] = useState("");
   const [summary, setSummary] = useState("");
   const [story, setStory] = useState("");
-
   const [returns, setReturns] = useState<ReturnRow[]>([
     { title: "", price: "", description: "" },
   ]);
+
+  const [coverFile, setCoverFile] = useState<File | null>(null);
+  const [coverPreview, setCoverPreview] = useState<string | null>(null);
+  const coverInputRef = useRef<HTMLInputElement>(null);
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState(false);
 
+  function handlePickCover(e: React.ChangeEvent<HTMLInputElement>) {
+    setError(null);
+
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const validationError = validateSubmissionImage(file);
+    if (validationError) {
+      setError(validationError);
+      return;
+    }
+
+    setCoverFile(file);
+    setCoverPreview(URL.createObjectURL(file));
+  }
+
+  function removeCover() {
+    setCoverFile(null);
+    setCoverPreview(null);
+
+    if (coverInputRef.current) {
+      coverInputRef.current.value = "";
+    }
+  }
+
   function updateReturn(index: number, patch: Partial<ReturnRow>) {
     setReturns((prev) =>
-      prev.map((item, i) => (i === index ? { ...item, ...patch } : item))
+      prev.map((r, i) => (i === index ? { ...r, ...patch } : r))
     );
   }
 
@@ -56,17 +99,32 @@ export function SubmitProjectForm() {
     setLoading(true);
 
     try {
+      let coverImageUrl: string | null = null;
+
+      if (coverFile) {
+        const uploadResult = await uploadSubmissionCover(coverFile);
+
+        if (!uploadResult.ok) {
+          setError(uploadResult.error);
+          setLoading(false);
+          return;
+        }
+
+        coverImageUrl = uploadResult.url;
+      }
+
       const result = await submitProject({
         title,
         category,
         goalAmount: Number(goalAmount),
         summary,
         story,
-        returns: returns.map((item) => ({
-          title: item.title,
-          price: Number(item.price),
-          description: item.description,
+        returns: returns.map((r) => ({
+          title: r.title,
+          price: Number(r.price),
+          description: r.description,
         })),
+        coverImageUrl,
       });
 
       if (!result.ok) {
@@ -97,7 +155,7 @@ export function SubmitProjectForm() {
         </p>
 
         <p className="mb-6 text-[12px] text-ink-sub">
-          現在は運営確認の準備中です。公開機能は順次ご案内します。
+          （現在は運営確認の準備中です。公開機能は順次ご案内します）
         </p>
 
         <div className="flex flex-col gap-3">
@@ -141,6 +199,74 @@ export function SubmitProjectForm() {
 
       <div className="mb-5">
         <label className={labelCls}>
+          メイン画像
+          <span className="text-[10px] font-bold text-ink-sub">任意</span>
+        </label>
+
+        {coverPreview ? (
+          <div className="relative overflow-hidden rounded-card-lg border border-line">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={coverPreview}
+              alt="メイン画像のプレビュー"
+              className="h-[200px] w-full object-cover"
+            />
+
+            <button
+              type="button"
+              onClick={removeCover}
+              disabled={loading}
+              className="absolute right-2 top-2 grid h-8 w-8 place-items-center rounded-full bg-ink/60 text-white backdrop-blur-sm active:scale-90"
+              aria-label="画像を削除"
+            >
+              <svg
+                className="h-4 w-4"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth={2.5}
+              >
+                <path d="M18 6L6 18M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+        ) : (
+          <button
+            type="button"
+            onClick={() => coverInputRef.current?.click()}
+            disabled={loading}
+            className="flex h-[160px] w-full flex-col items-center justify-center gap-2 rounded-card-lg border border-dashed border-primary/40 bg-primary/5 text-primary active:scale-[.99]"
+          >
+            <svg
+              className="h-8 w-8"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth={2}
+            >
+              <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
+              <circle cx="12" cy="13" r="4" />
+            </svg>
+
+            <span className="text-[13px] font-extrabold">画像を選択</span>
+            <span className="text-[11px] font-bold text-ink-sub">
+              JPEG / PNG / WebP・5MBまで
+            </span>
+          </button>
+        )}
+
+        <input
+          ref={coverInputRef}
+          type="file"
+          accept="image/jpeg,image/png,image/webp"
+          onChange={handlePickCover}
+          className="hidden"
+          disabled={loading}
+        />
+      </div>
+
+      <div className="mb-5">
+        <label className={labelCls}>
           夢のタイトル <span className={reqCls}>必須</span>
         </label>
 
@@ -165,14 +291,14 @@ export function SubmitProjectForm() {
         </label>
 
         <div className="flex flex-wrap gap-2">
-          {CATEGORIES.map((item) => {
-            const active = category === item.name;
+          {CATEGORIES.map((c) => {
+            const active = category === c.name;
 
             return (
               <button
                 type="button"
-                key={item.name}
-                onClick={() => setCategory(item.name)}
+                key={c.name}
+                onClick={() => setCategory(c.name)}
                 disabled={loading}
                 className={`rounded-full border px-3.5 py-2 text-[13px] font-bold transition ${
                   active
@@ -180,7 +306,7 @@ export function SubmitProjectForm() {
                     : "border-line bg-white text-ink-sub"
                 }`}
               >
-                {item.emoji} {item.name}
+                {c.emoji} {c.name}
               </button>
             );
           })}
@@ -273,17 +399,17 @@ export function SubmitProjectForm() {
         </div>
 
         <div className="flex flex-col gap-4">
-          {returns.map((item, index) => (
-            <div key={index} className="rounded-card border border-line p-4">
+          {returns.map((r, i) => (
+            <div key={i} className="rounded-card border border-line p-4">
               <div className="mb-2 flex items-center justify-between">
                 <span className="text-[12px] font-black text-primary">
-                  リターン {index + 1}
+                  リターン {i + 1}
                 </span>
 
-                {index > 0 && (
+                {i > 0 && (
                   <button
                     type="button"
-                    onClick={() => removeReturn(index)}
+                    onClick={() => removeReturn(i)}
                     disabled={loading}
                     className="text-[11.5px] font-bold text-hot"
                   >
@@ -298,10 +424,8 @@ export function SubmitProjectForm() {
 
               <input
                 type="text"
-                value={item.title}
-                onChange={(e) =>
-                  updateReturn(index, { title: e.target.value })
-                }
+                value={r.title}
+                onChange={(e) => updateReturn(i, { title: e.target.value })}
                 maxLength={40}
                 placeholder="例：お礼のメッセージ＋活動報告"
                 className={`${inputCls} mb-3`}
@@ -316,10 +440,8 @@ export function SubmitProjectForm() {
                 <input
                   type="number"
                   inputMode="numeric"
-                  value={item.price}
-                  onChange={(e) =>
-                    updateReturn(index, { price: e.target.value })
-                  }
+                  value={r.price}
+                  onChange={(e) => updateReturn(i, { price: e.target.value })}
                   min={500}
                   step={100}
                   placeholder="3000"
@@ -333,16 +455,16 @@ export function SubmitProjectForm() {
               </div>
 
               <label className="mb-1 block text-[11.5px] font-bold text-ink-sub">
-                説明{" "}
+                説明
                 <span className="text-[10px] font-bold text-ink-sub">
                   任意
                 </span>
               </label>
 
               <textarea
-                value={item.description}
+                value={r.description}
                 onChange={(e) =>
-                  updateReturn(index, { description: e.target.value })
+                  updateReturn(i, { description: e.target.value })
                 }
                 maxLength={200}
                 rows={2}
@@ -385,8 +507,6 @@ export function SubmitProjectForm() {
 
       <p className="mt-3 text-center text-[11px] leading-relaxed text-ink-sub">
         投稿後、運営が内容を確認します。
-        <br />
-        画像の追加は今後のステップでご案内します。
       </p>
     </form>
   );
