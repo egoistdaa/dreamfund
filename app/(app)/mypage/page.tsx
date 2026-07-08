@@ -29,7 +29,7 @@ export default async function MyPage() {
 
   const menuItems = [
     { label: "\u652f\u63f4\u3057\u305f\u30d7\u30ed\u30b8\u30a7\u30af\u30c8", href: "#" },
-    { label: "\u6295\u7a3f\u3057\u305f\u30d7\u30ed\u30b8\u30a7\u30af\u30c8", href: "#" },
+    { label: "\u6295\u7a3f\u3057\u305f\u30d7\u30ed\u30b8\u30a7\u30af\u30c8", href: "/mypage/submissions" },
     { label: "\u304a\u6c17\u306b\u5165\u308a", href: "/favorites" },
     { label: "\u901a\u77e5", href: "#" },
     { label: "\u8a2d\u5b9a", href: "#" },
