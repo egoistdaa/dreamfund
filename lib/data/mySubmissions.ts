@@ -1,4 +1,5 @@
 import { createServerSupabase } from "@/lib/supabase/server-auth";
+import type { SubmissionReturn } from "@/types/database";
 
 /**
  * 自分の投稿申請一覧を取得（サーバー）。
@@ -17,6 +18,13 @@ export type MySubmission = {
   createdAt: string;
 };
 
+/** 詳細表示用（summary / story / returns を含む） */
+export type MySubmissionDetail = MySubmission & {
+  summary: string;
+  story: string;
+  returns: SubmissionReturn[];
+};
+
 type Row = {
   id: string;
   title: string;
@@ -25,6 +33,12 @@ type Row = {
   cover_image_url: string | null;
   status: string;
   created_at: string;
+};
+
+type DetailRow = Row & {
+  summary: string;
+  story: string;
+  returns: SubmissionReturn[];
 };
 
 export async function getMySubmissions(
@@ -53,6 +67,50 @@ export async function getMySubmissions(
     status: r.status,
     createdAt: r.created_at,
   }));
+}
+
+/**
+ * ID指定で自分の申請を1件取得（サーバー）。
+ * id と user_id の両方で絞る。RLSも本人の行しか返さないため、
+ * 他人のIDや存在しないIDは null になる。
+ */
+export async function getMySubmissionById(
+  userId: string,
+  id: string
+): Promise<MySubmissionDetail | null> {
+  const supabase = createServerSupabase();
+
+  const { data, error } = await supabase
+    .from("project_submissions")
+    .select(
+      "id, title, category, goal_amount, cover_image_url, status, created_at, summary, story, returns"
+    )
+    .eq("id", id)
+    .eq("user_id", userId)
+    .maybeSingle();
+
+  if (error) {
+    throw error;
+  }
+
+  if (!data) {
+    return null;
+  }
+
+  const row = data as DetailRow;
+
+  return {
+    id: row.id,
+    title: row.title,
+    category: row.category,
+    goalAmount: row.goal_amount,
+    coverImageUrl: row.cover_image_url,
+    status: row.status,
+    createdAt: row.created_at,
+    summary: row.summary,
+    story: row.story,
+    returns: Array.isArray(row.returns) ? row.returns : [],
+  };
 }
 
 /** status を日本語ラベル＋色に変換。未知の値でも落ちないようフォールバックを持つ。 */
