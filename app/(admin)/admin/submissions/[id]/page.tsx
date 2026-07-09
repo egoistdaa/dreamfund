@@ -110,7 +110,7 @@ export default async function AdminSubmissionDetailPage({
               概要
             </h2>
 
-            <p className="whitespace-pre-wrap text-[14px] leading-relaxed text-slate-700">
+            <p className="whitespace-pre-wrap break-words text-[14px] leading-relaxed text-slate-700">
               {submission.summary}
             </p>
           </section>
@@ -120,7 +120,7 @@ export default async function AdminSubmissionDetailPage({
               本文・ストーリー
             </h2>
 
-            <p className="whitespace-pre-wrap text-[14px] leading-[1.9] text-slate-700">
+            <p className="whitespace-pre-wrap break-words text-[14px] leading-[1.9] text-slate-700">
               {submission.story}
             </p>
 
@@ -163,7 +163,7 @@ export default async function AdminSubmissionDetailPage({
                     </div>
 
                     {returnItem.description && (
-                      <p className="mt-1.5 text-[13px] leading-relaxed text-slate-500">
+                      <p className="mt-1.5 break-words text-[13px] leading-relaxed text-slate-500">
                         {returnItem.description}
                       </p>
                     )}
