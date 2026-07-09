@@ -44,7 +44,23 @@ export interface Database {
         };
         Relationships: [];
       };
-
+      profiles_private: {
+        Row: {
+          id: string;
+          role: "user" | "creator" | "reviewer" | "admin";
+          kyc_status: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id: string;
+          role?: "user" | "creator" | "reviewer" | "admin";
+        };
+        Update: {
+          role?: "user" | "creator" | "reviewer" | "admin";
+        };
+        Relationships: [];
+      };
       projects: {
         Row: {
           id: string;
