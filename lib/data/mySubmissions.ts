@@ -122,7 +122,7 @@ export function statusLabel(status: string): {
     case "pending_review":
       return { text: "審査中", className: "bg-warning/15 text-warning" };
     case "approved":
-      return { text: "公開済み", className: "bg-success/15 text-success" };
+      return { text: "公開準備中", className: "bg-emerald-100 text-emerald-700" };
     case "rejected":
       return { text: "見送り", className: "bg-error/15 text-error" };
     default:

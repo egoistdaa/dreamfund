@@ -110,7 +110,7 @@ export default async function SubmissionDetailPage({
 
       <section className="mb-6">
         <h2 className="mb-2 text-base font-black tracking-tight">概要</h2>
-        <p className="whitespace-pre-wrap text-[13.5px] leading-relaxed">
+        <p className="whitespace-pre-wrap break-words [overflow-wrap:anywhere] text-[13.5px] leading-relaxed">
           {submission.summary}
         </p>
       </section>
@@ -119,7 +119,7 @@ export default async function SubmissionDetailPage({
         <h2 className="mb-2 text-base font-black tracking-tight">
           本文・ストーリー
         </h2>
-        <p className="whitespace-pre-wrap text-[13.5px] leading-[1.9]">
+        <p className="whitespace-pre-wrap break-words [overflow-wrap:anywhere] text-[13.5px] leading-[1.9]">
           {submission.story}
         </p>
       </section>
@@ -146,7 +146,7 @@ export default async function SubmissionDetailPage({
                 </div>
 
                 {returnItem.description && (
-                  <p className="mt-1 text-[12.5px] leading-relaxed text-ink-sub">
+                  <p className="mt-1.5 break-words [overflow-wrap:anywhere] text-[13px] leading-relaxed text-ink-sub">
                     {returnItem.description}
                   </p>
                 )}

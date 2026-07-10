@@ -96,7 +96,7 @@ export default async function AdminSubmissionDetailPage({
             <h2 className="mb-3 text-[15px] font-black text-slate-900">
               概要
             </h2>
-            <p className="whitespace-pre-wrap break-words text-[14px] leading-relaxed text-slate-700">
+            <p className="whitespace-pre-wrap break-words [overflow-wrap:anywhere] text-[14px] leading-relaxed text-slate-700">
               {s.summary}
             </p>
           </section>
@@ -105,7 +105,7 @@ export default async function AdminSubmissionDetailPage({
             <h2 className="mb-3 text-[15px] font-black text-slate-900">
               本文・ストーリー
             </h2>
-            <p className="whitespace-pre-wrap break-words text-[14px] leading-[1.9] text-slate-700">
+            <p className="whitespace-pre-wrap break-words [overflow-wrap:anywhere] text-[14px] leading-[1.9] text-slate-700">
               {s.story}
             </p>
             <p className="mt-4 border-t border-slate-100 pt-3 text-[11.5px] text-slate-400">
@@ -139,7 +139,7 @@ export default async function AdminSubmissionDetailPage({
                       {r.title}
                     </div>
                     {r.description && (
-                      <p className="mt-1.5 break-words text-[13px] leading-relaxed text-slate-500">
+                      <p className="mt-1.5 break-words [overflow-wrap:anywhere] text-[13px] leading-relaxed text-slate-500">
                         {r.description}
                       </p>
                     )}
