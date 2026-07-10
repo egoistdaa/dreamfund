@@ -169,6 +169,8 @@ export function adminStatusLabel(status: string): {
       return { text: "審査中", className: "bg-amber-100 text-amber-700" };
     case "approved":
   return { text: "公開準備", className: "bg-emerald-100 text-emerald-700" };
+    case "published":
+  return { text: "公開済み", className: "bg-blue-100 text-blue-700" };
     case "rejected":
       return { text: "見送り", className: "bg-rose-100 text-rose-700" };
     default:

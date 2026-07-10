@@ -1,10 +1,16 @@
 "use client";
 
+import Link from "next/link";
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { approveSubmission, rejectSubmission } from "@/lib/data/adminActions";
+import { publishSubmission } from "@/lib/data/publishActions";
 
-type Action = "approve" | "reject";
+type Action = "approve" | "reject" | "publish";
+
+function projectSlugFromSubmissionId(id: string) {
+  return `p-${id.replaceAll("-", "").slice(0, 8)}`;
+}
 
 export function ReviewActions({ id, status }: { id: string; status: string }) {
   const router = useRouter();
@@ -13,39 +19,9 @@ export function ReviewActions({ id, status }: { id: string; status: string }) {
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
-  const isProcessed = status !== "pending_review";
   const loading = pending || busy;
-
-  if (isProcessed) {
-    const done =
-      status === "approved"
-        ? {
-            text: "この申請は承認済みです（公開準備）",
-            cls: "bg-emerald-50 text-emerald-700 ring-emerald-200",
-          }
-        : status === "rejected"
-          ? {
-              text: "この申請は見送りになりました",
-              cls: "bg-rose-50 text-rose-700 ring-rose-200",
-            }
-          : {
-              text: "この申請は処理済みです",
-              cls: "bg-slate-50 text-slate-600 ring-slate-200",
-            };
-
-    return (
-      <div>
-        <div
-          className={`rounded-xl px-4 py-3 text-center text-[13px] font-bold ring-1 ${done.cls}`}
-        >
-          {done.text}
-        </div>
-        <p className="mt-4 border-t border-slate-100 pt-3 text-[11px] leading-relaxed text-slate-400">
-          公開ページへの反映は次のステップで実装予定です。
-        </p>
-      </div>
-    );
-  }
+  const projectSlug = projectSlugFromSubmissionId(id);
+  const projectHref = `/projects/${projectSlug}`;
 
   async function run(action: Action) {
     setError(null);
@@ -55,7 +31,9 @@ export function ReviewActions({ id, status }: { id: string; status: string }) {
     const res =
       action === "approve"
         ? await approveSubmission(id)
-        : await rejectSubmission(id);
+        : action === "reject"
+          ? await rejectSubmission(id)
+          : await publishSubmission(id);
 
     setBusy(false);
 
@@ -65,6 +43,122 @@ export function ReviewActions({ id, status }: { id: string; status: string }) {
     }
 
     startTransition(() => router.refresh());
+  }
+
+  if (status === "published") {
+    return (
+      <div>
+        <div className="rounded-xl px-4 py-3 text-center text-[13px] font-bold text-emerald-700 ring-1 ring-emerald-200 bg-emerald-50">
+          この申請は公開済みです
+        </div>
+
+        <Link
+          href={projectHref}
+          className="mt-3 flex w-full items-center justify-center rounded-xl bg-slate-900 px-4 py-3 text-[13.5px] font-bold text-white transition hover:bg-slate-700"
+        >
+          公開ページを見る
+        </Link>
+      </div>
+    );
+  }
+
+  if (status === "approved") {
+    return (
+      <div>
+        <p className="mb-4 text-[12px] leading-relaxed text-slate-500">
+          この申請は承認済みです。公開すると、プロジェクト一覧と詳細ページに表示されます。
+        </p>
+
+        {error && (
+          <div className="mb-3 rounded-lg bg-rose-50 px-3 py-2.5 text-[12.5px] font-bold text-rose-700 ring-1 ring-rose-200">
+            {error}
+          </div>
+        )}
+
+        <button
+          type="button"
+          onClick={() => setConfirming("publish")}
+          disabled={loading}
+          className="flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-3 text-[13.5px] font-bold text-white transition hover:bg-emerald-700 disabled:opacity-50"
+        >
+          <svg
+            className="h-4 w-4"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={2.5}
+          >
+            <path d="M12 5v14M5 12h14" />
+          </svg>
+          {loading ? "公開中…" : "公開する"}
+        </button>
+
+        {confirming === "publish" && (
+          <div
+            className="fixed inset-0 z-[200] flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-sm"
+            onClick={() => setConfirming(null)}
+            role="dialog"
+            aria-modal="true"
+          >
+            <div
+              className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <h3 className="mb-2 text-lg font-black text-slate-900">
+                この申請を公開しますか？
+              </h3>
+              <p className="mb-6 text-[13px] leading-relaxed text-slate-600">
+                公開すると、プロジェクト一覧と詳細ページに表示されます。
+                <br />
+                募集期間は公開日から30日間になります。
+                <br />
+                この操作は二重実行できません。
+              </p>
+
+              <div className="flex gap-3">
+                <button
+                  type="button"
+                  onClick={() => setConfirming(null)}
+                  disabled={loading}
+                  className="flex-1 rounded-xl border border-slate-200 px-4 py-3 text-[13.5px] font-bold text-slate-600 hover:bg-slate-50 disabled:opacity-50"
+                >
+                  キャンセル
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => run("publish")}
+                  disabled={loading}
+                  className="flex-1 rounded-xl bg-emerald-600 px-4 py-3 text-[13.5px] font-bold text-white hover:bg-emerald-700 disabled:opacity-50"
+                >
+                  {loading ? "公開中…" : "公開する"}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  if (status === "rejected") {
+    return (
+      <div>
+        <div className="rounded-xl px-4 py-3 text-center text-[13px] font-bold text-rose-700 ring-1 ring-rose-200 bg-rose-50">
+          この申請は見送りになりました
+        </div>
+      </div>
+    );
+  }
+
+  if (status !== "pending_review") {
+    return (
+      <div>
+        <div className="rounded-xl px-4 py-3 text-center text-[13px] font-bold text-slate-600 ring-1 ring-slate-200 bg-slate-50">
+          この申請は処理済みです
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -117,7 +211,7 @@ export function ReviewActions({ id, status }: { id: string; status: string }) {
         </button>
       </div>
 
-      {confirming && (
+      {confirming && confirming !== "publish" && (
         <div
           className="fixed inset-0 z-[200] flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-sm"
           onClick={() => setConfirming(null)}
