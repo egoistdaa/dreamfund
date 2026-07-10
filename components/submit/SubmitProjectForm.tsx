@@ -378,12 +378,12 @@ export function SubmitProjectForm() {
 
         <p
           className={`mt-1 text-right text-[11px] ${
-            story.length < 500 || story.length > 2000
+            story.length < 100 || story.length > 2000
               ? "text-hot"
               : "text-ink-sub"
           }`}
         >
-          {story.length}/2000（500文字以上）
+          {story.length}/2000（100文字以上で入力してください。）
         </p>
       </div>
 
