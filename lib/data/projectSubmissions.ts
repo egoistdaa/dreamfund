@@ -40,7 +40,7 @@ function validate(input: SubmissionInput): string | null {
   if (summary.length > 120) return "概要文は120文字以内で入力してください。";
 
   const story = input.story.trim();
-  if (story.length < 500) return "本文は500文字以上で入力してください。";
+  if (story.length < 100) return "本文は100文字以上で入力してください。";
   if (story.length > 2000) return "本文は2,000文字以内で入力してください。";
 
   if (input.returns.length < 1) return "リターンを1つ以上入力してください。";

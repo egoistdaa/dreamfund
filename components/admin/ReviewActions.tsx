@@ -12,12 +12,21 @@ function projectSlugFromSubmissionId(id: string) {
   return `p-${id.replaceAll("-", "").slice(0, 8)}`;
 }
 
-export function ReviewActions({ id, status }: { id: string; status: string }) {
+export function ReviewActions({
+  id,
+  status,
+  title,
+}: {
+  id: string;
+  status: string;
+  title: string;
+}) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [confirming, setConfirming] = useState<Action | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   const loading = pending || busy;
   const projectSlug = projectSlugFromSubmissionId(id);
@@ -45,22 +54,110 @@ export function ReviewActions({ id, status }: { id: string; status: string }) {
     startTransition(() => router.refresh());
   }
 
+  function getPublicUrl() {
+  return `${window.location.origin}${projectHref}`;
+}
+
+function shareToX() {
+  const url = getPublicUrl();
+  const text = `「${title}」がDreamFundで公開されました！\n夢への第一歩を応援してください。`;
+
+  window.open(
+    `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`,
+    "_blank",
+    "noopener,noreferrer"
+  );
+}
+
+function shareToLine() {
+  const url = getPublicUrl();
+
+  window.open(
+    `https://social-plugins.line.me/lineit/share?url=${encodeURIComponent(url)}`,
+    "_blank",
+    "noopener,noreferrer"
+  );
+}
+
+async function copyPublicUrl() {
+  const url = getPublicUrl();
+
+  try {
+    await navigator.clipboard.writeText(url);
+    setCopied(true);
+    window.setTimeout(() => setCopied(false), 2000);
+  } catch {
+    window.prompt("このURLをコピーしてください", url);
+  }
+}
   if (status === "published") {
-    return (
-      <div>
-        <div className="rounded-xl px-4 py-3 text-center text-[13px] font-bold text-emerald-700 ring-1 ring-emerald-200 bg-emerald-50">
-          この申請は公開済みです
+  return (
+    <div>
+      <div className="overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-50 via-white to-sky-50 p-5 ring-1 ring-emerald-200">
+        <div className="text-center">
+          <div className="mb-2 text-4xl">🎉</div>
+
+          <h3 className="text-xl font-black tracking-tight text-slate-900">
+            公開おめでとうございます！
+          </h3>
+
+          <p className="mt-2 text-[13px] leading-relaxed text-slate-600">
+            あなたの夢が公開されました。
+            <br />
+            DreamFundは、あなたの夢への第一歩を応援します。
+          </p>
         </div>
 
-        <Link
-          href={projectHref}
-          className="mt-3 flex w-full items-center justify-center rounded-xl bg-slate-900 px-4 py-3 text-[13.5px] font-bold text-white transition hover:bg-slate-700"
-        >
-          公開ページを見る
-        </Link>
+        <div className="my-5 border-t border-emerald-100" />
+
+        <div className="text-center">
+          <div className="text-lg">📣</div>
+
+          <h4 className="mt-1 text-[15px] font-black text-slate-900">
+            応援を集めましょう！
+          </h4>
+
+          <p className="mt-1 text-[12px] leading-relaxed text-slate-500">
+            夢をシェアして、最初の応援者へ届けましょう。
+          </p>
+        </div>
+
+        <div className="mt-4 grid grid-cols-1 gap-2.5 sm:grid-cols-2">
+          <button
+            type="button"
+            onClick={shareToX}
+            className="flex items-center justify-center rounded-xl bg-slate-900 px-4 py-3 text-[13.5px] font-bold text-white transition hover:bg-slate-700"
+          >
+            Xでシェア
+          </button>
+
+          <button
+            type="button"
+            onClick={shareToLine}
+            className="flex items-center justify-center rounded-xl bg-[#06C755] px-4 py-3 text-[13.5px] font-bold text-white transition hover:opacity-90"
+          >
+            LINEでシェア
+          </button>
+
+          <button
+            type="button"
+            onClick={copyPublicUrl}
+            className="flex items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-3 text-[13.5px] font-bold text-slate-700 transition hover:bg-slate-50"
+          >
+            {copied ? "コピーしました！" : "URLをコピー"}
+          </button>
+
+          <Link
+            href={projectHref}
+            className="flex items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-3 text-[13.5px] font-bold text-slate-700 transition hover:bg-slate-50"
+          >
+            公開ページを見る
+          </Link>
+        </div>
       </div>
-    );
-  }
+    </div>
+  );
+}
 
   if (status === "approved") {
     return (
