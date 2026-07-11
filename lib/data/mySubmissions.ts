@@ -123,6 +123,11 @@ export function statusLabel(status: string): {
       return { text: "審査中", className: "bg-warning/15 text-warning" };
     case "approved":
       return { text: "公開準備中", className: "bg-emerald-100 text-emerald-700" };
+      case "published":
+  return {
+    text: "公開済み",
+    className: "bg-blue-100 text-blue-700",
+  };
     case "rejected":
       return { text: "見送り", className: "bg-error/15 text-error" };
     default:

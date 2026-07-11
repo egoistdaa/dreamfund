@@ -209,7 +209,7 @@ export default async function AdminSubmissionDetailPage({
             <h2 className="mb-1 text-[15px] font-black text-slate-900">
               審査アクション
             </h2>
-            <ReviewActions id={s.id} status={s.status} title={s.title} />
+            <ReviewActions id={s.id} status={s.status} />
           </section>
         </div>
       </div>

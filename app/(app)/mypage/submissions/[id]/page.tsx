@@ -7,6 +7,7 @@ import {
   statusLabel,
 } from "@/lib/data/mySubmissions";
 import { formatYen } from "@/lib/format";
+import { PublishedShareCard } from "@/components/PublishedShareCard";
 
 /**
  * 投稿申請の詳細（ログイン必須・本人のみ）。
@@ -160,6 +161,12 @@ export default async function SubmissionDetailPage({
         現在のステータス：
         <span className="font-black">{badge.text}</span>
       </div>
+      {submission.status === "published" && (
+  <PublishedShareCard
+    submissionId={submission.id}
+    title={submission.title}
+  />
+)}
 
       <p className="mt-4 text-center text-[11px] text-ink-sub">
         編集・取り下げ機能は今後のフェーズで実装予定です。

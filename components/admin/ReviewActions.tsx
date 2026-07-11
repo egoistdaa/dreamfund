@@ -15,18 +15,15 @@ function projectSlugFromSubmissionId(id: string) {
 export function ReviewActions({
   id,
   status,
-  title,
 }: {
   id: string;
   status: string;
-  title: string;
 }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [confirming, setConfirming] = useState<Action | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
-  const [copied, setCopied] = useState(false);
 
   const loading = pending || busy;
   const projectSlug = projectSlugFromSubmissionId(id);
@@ -54,110 +51,22 @@ export function ReviewActions({
     startTransition(() => router.refresh());
   }
 
-  function getPublicUrl() {
-  return `${window.location.origin}${projectHref}`;
-}
-
-function shareToX() {
-  const url = getPublicUrl();
-  const text = `「${title}」がDreamFundで公開されました！\n夢への第一歩を応援してください。`;
-
-  window.open(
-    `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`,
-    "_blank",
-    "noopener,noreferrer"
-  );
-}
-
-function shareToLine() {
-  const url = getPublicUrl();
-
-  window.open(
-    `https://social-plugins.line.me/lineit/share?url=${encodeURIComponent(url)}`,
-    "_blank",
-    "noopener,noreferrer"
-  );
-}
-
-async function copyPublicUrl() {
-  const url = getPublicUrl();
-
-  try {
-    await navigator.clipboard.writeText(url);
-    setCopied(true);
-    window.setTimeout(() => setCopied(false), 2000);
-  } catch {
-    window.prompt("このURLをコピーしてください", url);
-  }
-}
   if (status === "published") {
-  return (
-    <div>
-      <div className="overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-50 via-white to-sky-50 p-5 ring-1 ring-emerald-200">
-        <div className="text-center">
-          <div className="mb-2 text-4xl">🎉</div>
-
-          <h3 className="text-xl font-black tracking-tight text-slate-900">
-            公開おめでとうございます！
-          </h3>
-
-          <p className="mt-2 text-[13px] leading-relaxed text-slate-600">
-            あなたの夢が公開されました。
-            <br />
-            DreamFundは、あなたの夢への第一歩を応援します。
-          </p>
+    return (
+      <div>
+        <div className="rounded-xl bg-emerald-50 px-4 py-3 text-center text-[13px] font-bold text-emerald-700 ring-1 ring-emerald-200">
+          この申請は公開済みです
         </div>
 
-        <div className="my-5 border-t border-emerald-100" />
-
-        <div className="text-center">
-          <div className="text-lg">📣</div>
-
-          <h4 className="mt-1 text-[15px] font-black text-slate-900">
-            応援を集めましょう！
-          </h4>
-
-          <p className="mt-1 text-[12px] leading-relaxed text-slate-500">
-            夢をシェアして、最初の応援者へ届けましょう。
-          </p>
-        </div>
-
-        <div className="mt-4 grid grid-cols-1 gap-2.5 sm:grid-cols-2">
-          <button
-            type="button"
-            onClick={shareToX}
-            className="flex items-center justify-center rounded-xl bg-slate-900 px-4 py-3 text-[13.5px] font-bold text-white transition hover:bg-slate-700"
-          >
-            Xでシェア
-          </button>
-
-          <button
-            type="button"
-            onClick={shareToLine}
-            className="flex items-center justify-center rounded-xl bg-[#06C755] px-4 py-3 text-[13.5px] font-bold text-white transition hover:opacity-90"
-          >
-            LINEでシェア
-          </button>
-
-          <button
-            type="button"
-            onClick={copyPublicUrl}
-            className="flex items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-3 text-[13.5px] font-bold text-slate-700 transition hover:bg-slate-50"
-          >
-            {copied ? "コピーしました！" : "URLをコピー"}
-          </button>
-
-          <Link
-            href={projectHref}
-            className="flex items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-3 text-[13.5px] font-bold text-slate-700 transition hover:bg-slate-50"
-          >
-            公開ページを見る
-          </Link>
-        </div>
+        <Link
+          href={projectHref}
+          className="mt-3 flex w-full items-center justify-center rounded-xl bg-slate-900 px-4 py-3 text-[13.5px] font-bold text-white transition hover:bg-slate-700"
+        >
+          公開ページを見る
+        </Link>
       </div>
-    </div>
-  );
-}
+    );
+  }
 
   if (status === "approved") {
     return (
@@ -187,6 +96,7 @@ async function copyPublicUrl() {
           >
             <path d="M12 5v14M5 12h14" />
           </svg>
+
           {loading ? "公開中…" : "公開する"}
         </button>
 
@@ -204,6 +114,7 @@ async function copyPublicUrl() {
               <h3 className="mb-2 text-lg font-black text-slate-900">
                 この申請を公開しますか？
               </h3>
+
               <p className="mb-6 text-[13px] leading-relaxed text-slate-600">
                 公開すると、プロジェクト一覧と詳細ページに表示されます。
                 <br />
@@ -240,20 +151,16 @@ async function copyPublicUrl() {
 
   if (status === "rejected") {
     return (
-      <div>
-        <div className="rounded-xl px-4 py-3 text-center text-[13px] font-bold text-rose-700 ring-1 ring-rose-200 bg-rose-50">
-          この申請は見送りになりました
-        </div>
+      <div className="rounded-xl bg-rose-50 px-4 py-3 text-center text-[13px] font-bold text-rose-700 ring-1 ring-rose-200">
+        この申請は見送りになりました
       </div>
     );
   }
 
   if (status !== "pending_review") {
     return (
-      <div>
-        <div className="rounded-xl px-4 py-3 text-center text-[13px] font-bold text-slate-600 ring-1 ring-slate-200 bg-slate-50">
-          この申請は処理済みです
-        </div>
+      <div className="rounded-xl bg-slate-50 px-4 py-3 text-center text-[13px] font-bold text-slate-600 ring-1 ring-slate-200">
+        この申請は処理済みです
       </div>
     );
   }
@@ -261,7 +168,7 @@ async function copyPublicUrl() {
   return (
     <div>
       <p className="mb-4 text-[12px] leading-relaxed text-slate-500">
-        承認すると公開準備の状態になります。公開ページへの反映は次のステップで実装予定です。
+        承認すると公開準備の状態になります。公開ページへの反映はまだ行われません。
       </p>
 
       {error && (
@@ -286,6 +193,7 @@ async function copyPublicUrl() {
           >
             <path d="M20 6L9 17l-5-5" />
           </svg>
+
           {loading ? "処理中…" : "承認する（公開準備へ）"}
         </button>
 
@@ -304,6 +212,7 @@ async function copyPublicUrl() {
           >
             <path d="M18 6L6 18M6 6l12 12" />
           </svg>
+
           見送りにする
         </button>
       </div>
@@ -324,10 +233,9 @@ async function copyPublicUrl() {
                 <h3 className="mb-2 text-lg font-black text-slate-900">
                   この申請を承認しますか？
                 </h3>
+
                 <p className="mb-6 text-[13px] leading-relaxed text-slate-600">
                   ステータスが「公開準備」に変わります。
-                  <br />
-                  この操作は元に戻せません。
                   <br />
                   公開ページへの反映はまだ行われません。
                 </p>
@@ -337,6 +245,7 @@ async function copyPublicUrl() {
                 <h3 className="mb-2 text-lg font-black text-slate-900">
                   この申請を見送りますか？
                 </h3>
+
                 <p className="mb-6 text-[13px] leading-relaxed text-slate-600">
                   ステータスが「見送り」に変わります。
                   <br />

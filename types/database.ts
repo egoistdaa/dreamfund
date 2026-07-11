@@ -194,6 +194,8 @@ export interface Database {
           status: string;
           created_at: string;
           updated_at: string;
+          published_project_id: string | null;
+published_seen_at: string | null;
         };
         Insert: {
           user_id: string;
@@ -205,9 +207,13 @@ export interface Database {
           returns: SubmissionReturn[];
           cover_image_url?: string | null;
           status?: string;
+          published_project_id?: string | null;
+published_seen_at?: string | null;
         };
         Update: Record<string, unknown>;
         Relationships: [];
+        published_project_id?: string | null;
+published_seen_at?: string | null;
       };
     };
 
