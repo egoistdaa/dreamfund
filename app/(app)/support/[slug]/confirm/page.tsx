@@ -3,6 +3,7 @@ import Link from "next/link";
 import { requireAuth } from "@/lib/auth/requireAuth";
 import { getProjectBySlug } from "@/lib/data/projects";
 import { formatYen, formatManYen, achievementRate } from "@/lib/format";
+import { ConfirmSupportButton } from "@/components/support/ConfirmSupportButton";
 
 export const metadata = {
   title: "支援内容の確認",
@@ -119,12 +120,12 @@ export default async function SupportConfirmPage({
         🚧 決済機能は次フェーズで実装します。現在はボタンを押しても課金されません。
       </div>
 
-      <button
-        disabled
-        className="flex min-h-tap w-full items-center justify-center rounded-[14px] bg-brand-135 text-[15.5px] font-extrabold text-white opacity-60"
-      >
-        支援を確定する（準備中）
-      </button>
+      {selectedReturn && (
+  <ConfirmSupportButton
+    projectSlug={project.slug}
+    returnId={selectedReturn.id}
+  />
+)}
     </div>
   );
 }

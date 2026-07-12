@@ -12,15 +12,15 @@ export function StickySupport({ project }: { project: Project }) {
   const rate = achievementRate(project);
   const days = daysLeft(project.endAt);
 
-  const confirmPath = `/support/${project.slug}/confirm`;
+  const supportPath = `/support/${project.slug}`;
 
   function handleSupport() {
-    if (loadingUser) return;
+  if (loadingUser) return;
 
-    if (!requireLogin(confirmPath)) return;
+  if (!requireLogin(supportPath)) return;
 
-    router.push(confirmPath);
-  }
+  router.push(supportPath);
+}
 
   return (
     <div className="sticky bottom-[calc(64px+env(safe-area-inset-bottom))] z-40 border-t border-line bg-white/95 px-4 pb-3 pt-3 backdrop-blur-xl">
