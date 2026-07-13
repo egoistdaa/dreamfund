@@ -2,6 +2,13 @@
 
 import { useState, useTransition } from "react";
 import { createPendingPledge } from "@/lib/data/pledgeActions";
+import { StripePaymentForm } from "@/components/support/StripePaymentForm";
+
+type PaymentSession = {
+  pledgeId: string;
+  amount: number;
+  clientSecret: string;
+};
 
 export function ConfirmSupportButton({
   projectSlug,
@@ -11,11 +18,12 @@ export function ConfirmSupportButton({
   returnId: string;
 }) {
   const [isPending, startTransition] = useTransition();
-  const [completed, setCompleted] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [paymentSession, setPaymentSession] =
+    useState<PaymentSession | null>(null);
 
   function handleClick() {
-    if (isPending || completed) return;
+    if (isPending || paymentSession) return;
 
     setError(null);
 
@@ -27,8 +35,22 @@ export function ConfirmSupportButton({
         return;
       }
 
-      setCompleted(true);
+      setPaymentSession({
+        pledgeId: result.pledgeId,
+        amount: result.amount,
+        clientSecret: result.clientSecret,
+      });
     });
+  }
+
+  if (paymentSession) {
+    return (
+      <StripePaymentForm
+        clientSecret={paymentSession.clientSecret}
+        pledgeId={paymentSession.pledgeId}
+        projectSlug={projectSlug}
+      />
+    );
   }
 
   return (
@@ -39,23 +61,15 @@ export function ConfirmSupportButton({
         </div>
       )}
 
-      {completed && (
-        <div className="mb-3 rounded-lg bg-green-50 px-3 py-2.5 text-[12px] font-bold text-green-700">
-          支援データを作成しました。現在はまだ決済されていません。
-        </div>
-      )}
-
       <button
         type="button"
         onClick={handleClick}
-        disabled={isPending || completed}
+        disabled={isPending}
         className="flex min-h-tap w-full items-center justify-center rounded-[14px] bg-brand-135 text-[15.5px] font-extrabold text-white disabled:opacity-60"
       >
         {isPending
-          ? "処理中..."
-          : completed
-            ? "支援手続きを開始しました"
-            : "支援手続きを開始する（テスト）"}
+          ? "決済画面を準備中..."
+          : "支払い方法を入力する（テスト）"}
       </button>
     </div>
   );
