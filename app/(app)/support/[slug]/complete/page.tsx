@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { SupportMessagePrompt } from "@/components/support/SupportMessagePrompt";
 
 export const metadata = {
   title: "支援のお申し込み完了",
@@ -16,9 +17,11 @@ export default function SupportCompletePage({
   };
   searchParams: {
     redirect_status?: string;
+    pledge?: string;
   };
 }) {
   const succeeded = searchParams.redirect_status === "succeeded";
+  const pledgeId = searchParams.pledge;
 
   return (
     <div className="px-[18px] py-10 text-center">
@@ -47,6 +50,13 @@ export default function SupportCompletePage({
           </>
         )}
       </p>
+
+      {succeeded && pledgeId && (
+        <SupportMessagePrompt
+          pledgeId={pledgeId}
+          projectSlug={params.slug}
+        />
+      )}
 
       <div className="mb-6 rounded-card border border-line bg-white p-4 text-left">
         <div className="mb-2 text-[13px] font-black">
