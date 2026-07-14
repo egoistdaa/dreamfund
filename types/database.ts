@@ -13,6 +13,16 @@ export type ProjectStatusDB =
 
 export type FundingTypeDB = "all_or_nothing" | "all_in";
 
+export type PledgeStatusDB =
+  | "pending"
+  | "paid"
+  | "refunded"
+  | "failed";
+
+export type SupportMessageTypeDB =
+  | "support"
+  | "creator_reply";
+
 export type SubmissionReturn = {
   title: string;
   price: number;
@@ -129,6 +139,79 @@ export interface Database {
         Relationships: [];
       };
 
+      pledges: {
+        Row: {
+          id: string;
+          project_id: string;
+          backer_id: string;
+          return_id: string | null;
+          amount: number;
+          fee_amount: number;
+          status: PledgeStatusDB;
+          stripe_payment_intent_id: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          project_id: string;
+          backer_id: string;
+          amount: number;
+          return_id?: string | null;
+          fee_amount?: number;
+          status?: PledgeStatusDB;
+          stripe_payment_intent_id?: string | null;
+        };
+        Update: Partial<
+          Database["public"]["Tables"]["pledges"]["Insert"]
+        >;
+        Relationships: [];
+      };
+
+
+      support_conversations: {
+        Row: {
+          id: string;
+          project_id: string;
+          backer_id: string;
+          created_at: string;
+          updated_at: string;
+          last_message_at: string;
+        };
+        Insert: {
+          project_id: string;
+          backer_id: string;
+          created_at?: string;
+          updated_at?: string;
+          last_message_at?: string;
+        };
+        Update: Partial<
+          Database["public"]["Tables"]["support_conversations"]["Insert"]
+        >;
+        Relationships: [];
+      };
+
+      support_messages: {
+        Row: {
+          id: string;
+          conversation_id: string;
+          sender_id: string;
+          message_type: SupportMessageTypeDB;
+          body: string;
+          created_at: string;
+        };
+        Insert: {
+          conversation_id: string;
+          sender_id: string;
+          message_type: SupportMessageTypeDB;
+          body: string;
+          created_at?: string;
+        };
+        Update: Partial<
+          Database["public"]["Tables"]["support_messages"]["Insert"]
+        >;
+        Relationships: [];
+      };
+
       project_updates: {
         Row: {
           id: string;
@@ -218,7 +301,40 @@ published_seen_at?: string | null;
     };
 
     Views: Record<string, never>;
-    Functions: Record<string, never>;
+        Functions: {
+      create_pending_pledge: {
+        Args: {
+          p_project_slug: string;
+          p_return_id: string;
+        };
+        Returns: {
+          pledge_id: string;
+          amount: number;
+        }[];
+      };
+
+      send_support_message: {
+        Args: {
+          p_project_slug: string;
+          p_body: string;
+        };
+        Returns: {
+          conversation_id: string;
+          message_id: string;
+        }[];
+      };
+
+      reply_to_support_message: {
+        Args: {
+          p_conversation_id: string;
+          p_body: string;
+        };
+        Returns: {
+          conversation_id: string;
+          message_id: string;
+        }[];
+      };
+    };
     Enums: {
       project_status: ProjectStatusDB;
       funding_type: FundingTypeDB;
