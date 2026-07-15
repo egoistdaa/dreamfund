@@ -41,28 +41,53 @@ export function ResetPasswordForm() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
+useEffect(() => {
     const supabase = createBrowserSupabase();
+    let cancelled = false;
 
-    const { data: authListener } = supabase.auth.onAuthStateChange((event) => {
-      if (event === "PASSWORD_RECOVERY") {
-        setStatus("ready");
+    async function verifyRecoveryLink() {
+      const searchParams = new URLSearchParams(
+        window.location.search
+      );
+
+      const tokenHash = searchParams.get("token_hash");
+      const type = searchParams.get("type");
+      const errorCode = searchParams.get("error_code");
+
+      if (
+        errorCode ||
+        !tokenHash ||
+        type !== "recovery"
+      ) {
+        if (!cancelled) {
+          setStatus("invalid");
+        }
+
+        return;
       }
-    });
 
-    supabase.auth.getSession().then(({ data }) => {
-      if (data.session) {
-        setStatus((current) => (current === "checking" ? "ready" : current));
+      const { error: verifyError } =
+        await supabase.auth.verifyOtp({
+          token_hash: tokenHash,
+          type: "recovery",
+        });
+
+      if (cancelled) {
+        return;
       }
-    });
 
-    const timer = setTimeout(() => {
-      setStatus((current) => (current === "checking" ? "invalid" : current));
-    }, 2500);
+      if (verifyError) {
+        setStatus("invalid");
+        return;
+      }
+
+      setStatus("ready");
+    }
+
+    void verifyRecoveryLink();
 
     return () => {
-      authListener.subscription.unsubscribe();
-      clearTimeout(timer);
+      cancelled = true;
     };
   }, []);
 
