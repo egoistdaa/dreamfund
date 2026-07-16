@@ -178,3 +178,121 @@ export async function getCreatorSupportConversations(
     ];
   });
 }
+export type CreatorSupportConversationDetail = {
+  id: string;
+  projectId: string;
+  projectTitle: string;
+  projectSlug: string;
+  backerId: string;
+  backerName: string;
+  backerAvatarUrl: string | null;
+  messages: {
+    id: string;
+    senderId: string;
+    messageType: SupportMessageTypeDB;
+    body: string;
+    createdAt: string;
+  }[];
+};
+
+type DetailMessageRow = {
+  id: string;
+  sender_id: string;
+  message_type: SupportMessageTypeDB;
+  body: string;
+  created_at: string;
+};
+
+/**
+ * 投稿者本人が閲覧できる応援メッセージの会話詳細を取得する。
+ * RLSに加え、project.owner_idでも投稿者本人か確認する。
+ */
+export async function getCreatorSupportConversationById(
+  userId: string,
+  conversationId: string
+): Promise<CreatorSupportConversationDetail | null> {
+  const supabase = createServerSupabase();
+
+  const { data: conversationData, error: conversationError } =
+    await supabase
+      .from("support_conversations")
+      .select("id, project_id, backer_id")
+      .eq("id", conversationId)
+      .maybeSingle();
+
+  if (conversationError) {
+    throw conversationError;
+  }
+
+  if (!conversationData) {
+    return null;
+  }
+
+  const conversation = conversationData as {
+    id: string;
+    project_id: string;
+    backer_id: string;
+  };
+
+  const [
+    { data: projectData, error: projectError },
+    { data: backerData, error: backerError },
+    { data: messageData, error: messageError },
+  ] = await Promise.all([
+    supabase
+      .from("projects")
+      .select("id, title, slug")
+      .eq("id", conversation.project_id)
+      .eq("owner_id", userId)
+      .maybeSingle(),
+
+    supabase
+      .from("public_profiles")
+      .select("id, display_name, avatar_url")
+      .eq("id", conversation.backer_id)
+      .maybeSingle(),
+
+    supabase
+      .from("support_messages")
+      .select("id, sender_id, message_type, body, created_at")
+      .eq("conversation_id", conversation.id)
+      .order("created_at", { ascending: true }),
+  ]);
+
+  if (projectError) {
+    throw projectError;
+  }
+
+  if (backerError) {
+    throw backerError;
+  }
+
+  if (messageError) {
+    throw messageError;
+  }
+
+  if (!projectData || !backerData) {
+    return null;
+  }
+
+  const project = projectData as ProjectRow;
+  const backer = backerData as BackerRow;
+  const messages = (messageData ?? []) as DetailMessageRow[];
+
+  return {
+    id: conversation.id,
+    projectId: project.id,
+    projectTitle: project.title,
+    projectSlug: project.slug,
+    backerId: backer.id,
+    backerName: backer.display_name,
+    backerAvatarUrl: backer.avatar_url,
+    messages: messages.map((message) => ({
+      id: message.id,
+      senderId: message.sender_id,
+      messageType: message.message_type,
+      body: message.body,
+      createdAt: message.created_at,
+    })),
+  };
+}
