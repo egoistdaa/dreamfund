@@ -92,18 +92,23 @@ export function AuthForm({ mode }: { mode: Mode }) {
           window.location.origin
         }/login?confirmed=1&redirect=${encodeURIComponent(redirect)}`;
 
-        const { error } = await supabase.auth.signUp({
-          email,
-          password,
-          options: {
-            emailRedirectTo,
-          },
-        });
+        const normalizedEmail = email.trim().toLowerCase();
 
-        if (error) {
-          setError(toJaError(error.message));
-          return;
-        }
+const { error } = await supabase.auth.signInWithPassword({
+  email: normalizedEmail,
+  password,
+});
+
+if (error) {
+  console.error("DreamFund login failed", {
+    code: error.code,
+    status: error.status,
+    message: error.message,
+  });
+
+  setError(toJaError(error.message));
+  return;
+}
 
         setSent(true);
       } else {
