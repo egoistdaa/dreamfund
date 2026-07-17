@@ -75,7 +75,10 @@ export default function SupportConversationView({
       }
     });
 }, [conversationId]);
-
+function handleBack() {
+  router.push("/mypage/support-messages");
+  router.refresh();
+}
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
@@ -117,11 +120,12 @@ export default function SupportConversationView({
     <div className="flex min-h-[calc(100dvh-64px)] flex-col bg-[#f6f7f9]">
       <header className="sticky top-0 z-20 border-b border-line bg-white/95 px-4 py-3 backdrop-blur">
         <div className="flex items-center gap-3">
-          <Link
-            href="/mypage/support-messages"
-            aria-label="応援メッセージ一覧へ戻る"
-            className="grid h-9 w-9 shrink-0 place-items-center rounded-full transition active:bg-sub"
-          >
+          <button
+  type="button"
+  onClick={handleBack}
+  aria-label="応援メッセージ一覧へ戻る"
+  className="grid h-9 w-9 shrink-0 place-items-center rounded-full transition active:bg-sub"
+>
             <svg
               className="h-5 w-5"
               viewBox="0 0 24 24"
@@ -133,7 +137,7 @@ export default function SupportConversationView({
             >
               <path d="M15 18l-6-6 6-6" />
             </svg>
-          </Link>
+          </button>
 
           {backerAvatarUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
