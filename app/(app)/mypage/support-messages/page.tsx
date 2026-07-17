@@ -184,17 +184,24 @@ export default async function SupportMessagesPage() {
                   </p>
                 </div>
 
-                <svg
-                  className="h-4 w-4 shrink-0 text-ink-sub/60 transition group-active:translate-x-0.5"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth={2.4}
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="M9 6l6 6-6 6" />
-                </svg>
+                {conversation.isUnread ? (
+  <span
+    aria-label="未読"
+    className="h-3 w-3 shrink-0 rounded-full bg-primary"
+  />
+) : (
+  <svg
+    className="h-4 w-4 shrink-0 text-ink-sub/60 transition group-active:translate-x-0.5"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth={2.4}
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <path d="M9 6l6 6-6 6" />
+  </svg>
+)}
               </Link>
             );
           })}

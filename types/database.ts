@@ -135,7 +135,9 @@ export interface Database {
           estimated_delivery?: string | null;
           sort_order?: number;
         };
-        Update: Partial<Database["public"]["Tables"]["returns"]["Insert"]>;
+        Update: Partial<
+          Database["public"]["Tables"]["returns"]["Insert"]
+        >;
         Relationships: [];
       };
 
@@ -167,7 +169,6 @@ export interface Database {
         Relationships: [];
       };
 
-
       support_conversations: {
         Row: {
           id: string;
@@ -176,6 +177,8 @@ export interface Database {
           created_at: string;
           updated_at: string;
           last_message_at: string;
+          creator_last_read_at: string | null;
+          backer_last_read_at: string | null;
         };
         Insert: {
           project_id: string;
@@ -183,6 +186,8 @@ export interface Database {
           created_at?: string;
           updated_at?: string;
           last_message_at?: string;
+          creator_last_read_at?: string | null;
+          backer_last_read_at?: string | null;
         };
         Update: Partial<
           Database["public"]["Tables"]["support_conversations"]["Insert"]
@@ -278,7 +283,7 @@ export interface Database {
           created_at: string;
           updated_at: string;
           published_project_id: string | null;
-published_seen_at: string | null;
+          published_seen_at: string | null;
         };
         Insert: {
           user_id: string;
@@ -291,17 +296,17 @@ published_seen_at: string | null;
           cover_image_url?: string | null;
           status?: string;
           published_project_id?: string | null;
-published_seen_at?: string | null;
+          published_seen_at?: string | null;
         };
         Update: Record<string, unknown>;
         Relationships: [];
         published_project_id?: string | null;
-published_seen_at?: string | null;
+        published_seen_at?: string | null;
       };
     };
 
     Views: Record<string, never>;
-        Functions: {
+    Functions: {
       create_pending_pledge: {
         Args: {
           p_project_slug: string;
@@ -333,6 +338,13 @@ published_seen_at?: string | null;
           conversation_id: string;
           message_id: string;
         }[];
+      };
+
+      mark_support_conversation_read: {
+        Args: {
+          p_conversation_id: string;
+        };
+        Returns: undefined;
       };
     };
     Enums: {

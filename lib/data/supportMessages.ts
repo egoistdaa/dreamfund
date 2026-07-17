@@ -13,6 +13,7 @@ export type CreatorSupportConversation = {
   latestMessageType: SupportMessageTypeDB | null;
   lastMessageAt: string;
   createdAt: string;
+  isUnread: boolean;
 };
 
 type ProjectRow = {
@@ -27,6 +28,7 @@ type ConversationRow = {
   backer_id: string;
   created_at: string;
   last_message_at: string;
+  creator_last_read_at: string | null;
 };
 
 type BackerRow = {
@@ -75,8 +77,8 @@ export async function getCreatorSupportConversations(
     await supabase
       .from("support_conversations")
       .select(
-        "id, project_id, backer_id, created_at, last_message_at"
-      )
+  "id, project_id, backer_id, created_at, last_message_at, creator_last_read_at"
+)
       .in("project_id", projectIds)
       .order("last_message_at", { ascending: false });
 
@@ -149,6 +151,33 @@ export async function getCreatorSupportConversations(
       );
     }
   }
+  const creatorLastReadAtByConversationId = new Map(
+  conversations.map((conversation) => [
+    conversation.id,
+    conversation.creator_last_read_at,
+  ])
+);
+
+const unreadConversationIds = new Set<string>();
+
+for (const message of messages) {
+  if (message.message_type !== "support") {
+    continue;
+  }
+
+  const creatorLastReadAt =
+    creatorLastReadAtByConversationId.get(
+      message.conversation_id
+    );
+
+  if (
+    !creatorLastReadAt ||
+    new Date(message.created_at).getTime() >
+      new Date(creatorLastReadAt).getTime()
+  ) {
+    unreadConversationIds.add(message.conversation_id);
+  }
+}
 
   return conversations.flatMap((conversation) => {
     const project = projectsById.get(conversation.project_id);
@@ -174,6 +203,7 @@ export async function getCreatorSupportConversations(
         latestMessageType: latestMessage?.message_type ?? null,
         lastMessageAt: conversation.last_message_at,
         createdAt: conversation.created_at,
+        isUnread: unreadConversationIds.has(conversation.id),
       },
     ];
   });

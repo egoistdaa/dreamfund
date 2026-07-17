@@ -59,6 +59,22 @@ export default function SupportConversationView({
       block: "end",
     });
   }, [messages.length]);
+  useEffect(() => {
+  const supabase = createBrowserSupabase();
+
+  void supabase
+    .rpc("mark_support_conversation_read", {
+      p_conversation_id: conversationId,
+    })
+    .then(({ error }) => {
+      if (error) {
+        console.error("DreamFund mark conversation read failed", {
+          code: error.code,
+          message: error.message,
+        });
+      }
+    });
+}, [conversationId]);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
