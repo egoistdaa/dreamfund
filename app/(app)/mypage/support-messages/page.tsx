@@ -71,7 +71,13 @@ export default async function SupportMessagesPage({
     getCreatorSupportConversations(user.id),
     getBackerSupportConversations(user.id),
   ]);
+const creatorUnreadCount = creatorConversations.filter(
+  (conversation) => conversation.isUnread
+).length;
 
+const backerUnreadCount = backerConversations.filter(
+  (conversation) => conversation.isUnread
+).length;
 const conversations = isSentView
   ? backerConversations.map((conversation) => ({
       ...conversation,
@@ -136,7 +142,15 @@ const conversations = isSentView
                 : "text-ink-sub"
             }`}
           >
-            受け取った応援
+            <span className="inline-flex items-center justify-center gap-1.5">
+  <span>受け取った応援</span>
+
+  {creatorUnreadCount > 0 && (
+    <span className="grid min-w-5 place-items-center rounded-full bg-primary px-1.5 py-0.5 text-[10px] font-black leading-none text-white">
+      {creatorUnreadCount > 99 ? "99+" : creatorUnreadCount}
+    </span>
+  )}
+</span>
           </Link>
 
           <Link
@@ -147,7 +161,15 @@ const conversations = isSentView
                 : "text-ink-sub"
             }`}
           >
-            送った応援
+            <span className="inline-flex items-center justify-center gap-1.5">
+  <span>送った応援</span>
+
+  {backerUnreadCount > 0 && (
+    <span className="grid min-w-5 place-items-center rounded-full bg-primary px-1.5 py-0.5 text-[10px] font-black leading-none text-white">
+      {backerUnreadCount > 99 ? "99+" : backerUnreadCount}
+    </span>
+  )}
+</span>
           </Link>
         </div>
       </div>
