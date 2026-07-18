@@ -15,6 +15,40 @@ export type CreatorSupportConversation = {
   createdAt: string;
   isUnread: boolean;
 };
+export type BackerSupportConversation = {
+  id: string;
+  projectId: string;
+  projectTitle: string;
+  projectSlug: string;
+  creatorId: string;
+  creatorName: string;
+  creatorAvatarUrl: string | null;
+  latestMessageBody: string | null;
+  latestMessageType: SupportMessageTypeDB | null;
+  lastMessageAt: string;
+  createdAt: string;
+  isUnread: boolean;
+};
+type BackerProjectRow = {
+  id: string;
+  title: string;
+  slug: string;
+  owner_id: string;
+};
+
+type CreatorProfileRow = {
+  id: string;
+  display_name: string;
+  avatar_url: string | null;
+};
+type BackerConversationRow = {
+  id: string;
+  project_id: string;
+  backer_id: string;
+  created_at: string;
+  last_message_at: string;
+  backer_last_read_at: string | null;
+};
 
 type ProjectRow = {
   id: string;
@@ -298,6 +332,22 @@ export type CreatorSupportConversationDetail = {
     createdAt: string;
   }[];
 };
+export type BackerSupportConversationDetail = {
+  id: string;
+  projectId: string;
+  projectTitle: string;
+  projectSlug: string;
+  creatorId: string;
+  creatorName: string;
+  creatorAvatarUrl: string | null;
+  messages: {
+    id: string;
+    senderId: string;
+    messageType: SupportMessageTypeDB;
+    body: string;
+    createdAt: string;
+  }[];
+};
 
 type DetailMessageRow = {
   id: string;
@@ -391,6 +441,262 @@ export async function getCreatorSupportConversationById(
     backerId: backer.id,
     backerName: backer.display_name,
     backerAvatarUrl: backer.avatar_url,
+    messages: messages.map((message) => ({
+      id: message.id,
+      senderId: message.sender_id,
+      messageType: message.message_type,
+      body: message.body,
+      createdAt: message.created_at,
+    })),
+  };
+}
+export async function getBackerSupportConversations(
+  userId: string
+): Promise<BackerSupportConversation[]> {
+  const supabase = createServerSupabase();
+
+  const { data: conversationData, error: conversationError } =
+    await supabase
+      .from("support_conversations")
+      .select(
+        "id, project_id, backer_id, created_at, last_message_at, backer_last_read_at"
+      )
+      .eq("backer_id", userId)
+      .order("last_message_at", { ascending: false });
+
+  if (conversationError) {
+    throw conversationError;
+  }
+
+  const conversations =
+    (conversationData ?? []) as BackerConversationRow[];
+
+  if (conversations.length === 0) {
+    return [];
+  }
+
+  const projectIds = Array.from(
+    new Set(
+      conversations.map((conversation) => conversation.project_id)
+    )
+  );
+
+  const conversationIds = conversations.map(
+    (conversation) => conversation.id
+  );
+
+  const { data: projectData, error: projectError } = await supabase
+    .from("projects")
+    .select("id, title, slug, owner_id")
+    .in("id", projectIds);
+
+  if (projectError) {
+    throw projectError;
+  }
+
+  const projects = (projectData ?? []) as BackerProjectRow[];
+
+  const creatorIds = Array.from(
+    new Set(projects.map((project) => project.owner_id))
+  );
+
+  const [
+    { data: creatorData, error: creatorError },
+    { data: messageData, error: messageError },
+  ] = await Promise.all([
+    supabase
+      .from("public_profiles")
+      .select("id, display_name, avatar_url")
+      .in("id", creatorIds),
+
+    supabase
+      .from("support_messages")
+      .select(
+        "conversation_id, message_type, body, created_at"
+      )
+      .in("conversation_id", conversationIds)
+      .order("created_at", { ascending: false }),
+  ]);
+
+  if (creatorError) {
+    throw creatorError;
+  }
+
+  if (messageError) {
+    throw messageError;
+  }
+
+  const creators = (creatorData ?? []) as CreatorProfileRow[];
+  const messages = (messageData ?? []) as MessageRow[];
+
+  const projectsById = new Map(
+    projects.map((project) => [project.id, project])
+  );
+
+  const creatorsById = new Map(
+    creators.map((creator) => [creator.id, creator])
+  );
+
+  const latestMessageByConversationId = new Map<
+    string,
+    MessageRow
+  >();
+
+  for (const message of messages) {
+    if (!latestMessageByConversationId.has(message.conversation_id)) {
+      latestMessageByConversationId.set(
+        message.conversation_id,
+        message
+      );
+    }
+  }
+
+  const backerLastReadAtByConversationId = new Map(
+    conversations.map((conversation) => [
+      conversation.id,
+      conversation.backer_last_read_at,
+    ])
+  );
+
+  const unreadConversationIds = new Set<string>();
+
+  for (const message of messages) {
+    if (message.message_type !== "creator_reply") {
+      continue;
+    }
+
+    const backerLastReadAt =
+      backerLastReadAtByConversationId.get(
+        message.conversation_id
+      );
+
+    if (
+      !backerLastReadAt ||
+      new Date(message.created_at).getTime() >
+        new Date(backerLastReadAt).getTime()
+    ) {
+      unreadConversationIds.add(message.conversation_id);
+    }
+  }
+
+  return conversations.flatMap((conversation) => {
+    const project = projectsById.get(conversation.project_id);
+
+    if (!project) {
+      return [];
+    }
+
+    const creator = creatorsById.get(project.owner_id);
+    const latestMessage = latestMessageByConversationId.get(
+      conversation.id
+    );
+
+    if (!creator) {
+      return [];
+    }
+
+    return [
+      {
+        id: conversation.id,
+        projectId: project.id,
+        projectTitle: project.title,
+        projectSlug: project.slug,
+        creatorId: creator.id,
+        creatorName: creator.display_name,
+        creatorAvatarUrl: creator.avatar_url,
+        latestMessageBody: latestMessage?.body ?? null,
+        latestMessageType: latestMessage?.message_type ?? null,
+        lastMessageAt: conversation.last_message_at,
+        createdAt: conversation.created_at,
+        isUnread: unreadConversationIds.has(conversation.id),
+      },
+    ];
+  });
+}
+export async function getBackerSupportConversationById(
+  userId: string,
+  conversationId: string
+): Promise<BackerSupportConversationDetail | null> {
+  const supabase = createServerSupabase();
+
+  const { data: conversationData, error: conversationError } =
+    await supabase
+      .from("support_conversations")
+      .select("id, project_id, backer_id")
+      .eq("id", conversationId)
+      .eq("backer_id", userId)
+      .maybeSingle();
+
+  if (conversationError) {
+    throw conversationError;
+  }
+
+  if (!conversationData) {
+    return null;
+  }
+
+  const conversation = conversationData as {
+    id: string;
+    project_id: string;
+    backer_id: string;
+  };
+
+  const { data: projectData, error: projectError } = await supabase
+    .from("projects")
+    .select("id, title, slug, owner_id")
+    .eq("id", conversation.project_id)
+    .maybeSingle();
+
+  if (projectError) {
+    throw projectError;
+  }
+
+  if (!projectData) {
+    return null;
+  }
+
+  const project = projectData as BackerProjectRow;
+
+  const [
+    { data: creatorData, error: creatorError },
+    { data: messageData, error: messageError },
+  ] = await Promise.all([
+    supabase
+      .from("public_profiles")
+      .select("id, display_name, avatar_url")
+      .eq("id", project.owner_id)
+      .maybeSingle(),
+
+    supabase
+      .from("support_messages")
+      .select("id, sender_id, message_type, body, created_at")
+      .eq("conversation_id", conversation.id)
+      .order("created_at", { ascending: true }),
+  ]);
+
+  if (creatorError) {
+    throw creatorError;
+  }
+
+  if (messageError) {
+    throw messageError;
+  }
+
+  if (!creatorData) {
+    return null;
+  }
+
+  const creator = creatorData as CreatorProfileRow;
+  const messages = (messageData ?? []) as DetailMessageRow[];
+
+  return {
+    id: conversation.id,
+    projectId: project.id,
+    projectTitle: project.title,
+    projectSlug: project.slug,
+    creatorId: creator.id,
+    creatorName: creator.display_name,
+    creatorAvatarUrl: creator.avatar_url,
     messages: messages.map((message) => ({
       id: message.id,
       senderId: message.sender_id,

@@ -339,7 +339,12 @@ export interface Database {
           message_id: string;
         }[];
       };
-
+mark_backer_support_conversation_read: {
+  Args: {
+    p_conversation_id: string;
+  };
+  Returns: undefined;
+};
       mark_support_conversation_read: {
         Args: {
           p_conversation_id: string;

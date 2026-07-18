@@ -14,8 +14,9 @@ export function AppNavigationFrame({
   const pathname = usePathname();
 
   const isSupportMessageDetail =
-    /^\/mypage\/support-messages\/[^/]+\/?$/.test(pathname);
-
+  /^\/mypage\/support-messages\/(?:sent\/)?[^/]+\/?$/.test(
+    pathname
+  );
   return (
     <>
       <main

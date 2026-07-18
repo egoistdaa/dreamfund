@@ -1,6 +1,9 @@
 import Link from "next/link";
 import { requireAuth } from "@/lib/auth/requireAuth";
-import { getCreatorSupportConversations } from "@/lib/data/supportMessages";
+import {
+  getBackerSupportConversations,
+  getCreatorSupportConversations,
+} from "@/lib/data/supportMessages";
 
 export const metadata = {
   title: "応援メッセージ",
@@ -50,11 +53,32 @@ function formatConversationTime(iso: string): string {
   }).format(date);
 }
 
-export default async function SupportMessagesPage() {
-  const user = await requireAuth("/mypage/support-messages");
+type SupportMessagesPageProps = {
+  searchParams?: {
+    view?: string;
+  };
+};
 
-  const conversations =
-    await getCreatorSupportConversations(user.id);
+export default async function SupportMessagesPage({
+  searchParams,
+}: SupportMessagesPageProps) {
+
+    const user = await requireAuth("/mypage/support-messages");
+  const isSentView = searchParams?.view === "sent";
+
+  const [creatorConversations, backerConversations] =
+  await Promise.all([
+    getCreatorSupportConversations(user.id),
+    getBackerSupportConversations(user.id),
+  ]);
+
+const conversations = isSentView
+  ? backerConversations.map((conversation) => ({
+      ...conversation,
+      backerName: conversation.creatorName,
+      backerAvatarUrl: conversation.creatorAvatarUrl,
+    }))
+  : creatorConversations;
 
   return (
     <div className="min-h-full bg-white">
@@ -103,6 +127,29 @@ export default async function SupportMessagesPage() {
             </svg>
           </div>
         </div>
+                <div className="mt-5 grid grid-cols-2 rounded-[14px] bg-sub p-1">
+          <Link
+            href="/mypage/support-messages?view=received"
+            className={`rounded-[11px] px-3 py-2.5 text-center text-[12px] font-black transition ${
+              !isSentView
+                ? "bg-white text-primary shadow-sm"
+                : "text-ink-sub"
+            }`}
+          >
+            受け取った応援
+          </Link>
+
+          <Link
+            href="/mypage/support-messages?view=sent"
+            className={`rounded-[11px] px-3 py-2.5 text-center text-[12px] font-black transition ${
+              isSentView
+                ? "bg-white text-primary shadow-sm"
+                : "text-ink-sub"
+            }`}
+          >
+            送った応援
+          </Link>
+        </div>
       </div>
 
       {conversations.length === 0 ? (
@@ -144,7 +191,11 @@ export default async function SupportMessagesPage() {
             return (
               <Link
                 key={conversation.id}
-                href={`/mypage/support-messages/${conversation.id}`}
+                href={
+  isSentView
+    ? `/mypage/support-messages/sent/${conversation.id}`
+    : `/mypage/support-messages/${conversation.id}`
+}
                 className="group flex items-center gap-3 border-b border-line/70 px-[18px] py-4 transition active:bg-sub"
               >
                 <div className="relative shrink-0">
