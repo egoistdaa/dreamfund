@@ -22,6 +22,13 @@ export type PledgeStatusDB =
 export type SupportMessageTypeDB =
   | "support"
   | "creator_reply";
+export type Json =
+  | string
+  | number
+  | boolean
+  | null
+  | { [key: string]: Json | undefined }
+  | Json[];
 
 export type SubmissionReturn = {
   title: string;
@@ -68,6 +75,32 @@ export interface Database {
         };
         Update: {
           role?: "user" | "creator" | "reviewer" | "admin";
+        };
+        Relationships: [];
+      };
+            notifications: {
+        Row: {
+          id: string;
+          user_id: string;
+          type: string;
+          payload: Json | null;
+          read_at: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          type: string;
+          payload?: Json | null;
+          read_at?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          user_id?: string;
+          type?: string;
+          payload?: Json | null;
+          read_at?: string | null;
+          created_at?: string;
         };
         Relationships: [];
       };
