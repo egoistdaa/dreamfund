@@ -208,6 +208,80 @@ for (const message of messages) {
     ];
   });
 }
+export async function getCreatorUnreadSupportConversationCount(
+  userId: string
+): Promise<number> {
+  const supabase = createServerSupabase();
+
+  const { data: projectData, error: projectError } = await supabase
+    .from("projects")
+    .select("id")
+    .eq("owner_id", userId);
+
+  if (projectError) {
+    throw projectError;
+  }
+
+  const projectIds = (projectData ?? []).map((project) => project.id);
+
+  if (projectIds.length === 0) {
+    return 0;
+  }
+
+  const { data: conversationData, error: conversationError } =
+    await supabase
+      .from("support_conversations")
+      .select("id, creator_last_read_at")
+      .in("project_id", projectIds);
+
+  if (conversationError) {
+    throw conversationError;
+  }
+
+  const conversations = conversationData ?? [];
+
+  if (conversations.length === 0) {
+    return 0;
+  }
+
+  const conversationIds = conversations.map(
+    (conversation) => conversation.id
+  );
+
+  const { data: messageData, error: messageError } = await supabase
+    .from("support_messages")
+    .select("conversation_id, created_at")
+    .in("conversation_id", conversationIds)
+    .eq("message_type", "support");
+
+  if (messageError) {
+    throw messageError;
+  }
+
+  const creatorLastReadAtByConversationId = new Map(
+    conversations.map((conversation) => [
+      conversation.id,
+      conversation.creator_last_read_at,
+    ])
+  );
+
+  const unreadConversationIds = new Set<string>();
+
+  for (const message of messageData ?? []) {
+    const creatorLastReadAt =
+      creatorLastReadAtByConversationId.get(message.conversation_id);
+
+    if (
+      !creatorLastReadAt ||
+      new Date(message.created_at).getTime() >
+        new Date(creatorLastReadAt).getTime()
+    ) {
+      unreadConversationIds.add(message.conversation_id);
+    }
+  }
+
+  return unreadConversationIds.size;
+}
 export type CreatorSupportConversationDetail = {
   id: string;
   projectId: string;

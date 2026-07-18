@@ -1,6 +1,7 @@
 ﻿import Link from "next/link";
 import { requireAuth } from "@/lib/auth/requireAuth";
 import { createServerSupabase } from "@/lib/supabase/server-auth";
+import { getCreatorUnreadSupportConversationCount } from "@/lib/data/supportMessages";
 
 export const metadata = {
   title: "\u30de\u30a4\u30da\u30fc\u30b8",
@@ -26,6 +27,8 @@ export default async function MyPage() {
 
   const name = profile?.display_name ?? "\u540d\u79f0\u672a\u8a2d\u5b9a";
   const avatarUrl = profile?.avatar_url ?? null;
+  const unreadSupportConversationCount =
+  await getCreatorUnreadSupportConversationCount(user.id);
 
     const menuItems = [
     { label: "支援したプロジェクト", href: "#" },
@@ -86,7 +89,18 @@ export default async function MyPage() {
             href={item.href}
             className="flex items-center justify-between rounded-card border border-line px-4 py-4 text-[14px] font-bold"
           >
-            {item.label}
+            <span className="flex min-w-0 items-center gap-2">
+  <span>{item.label}</span>
+
+  {item.href === "/mypage/support-messages" &&
+    unreadSupportConversationCount > 0 && (
+      <span className="grid min-w-5 place-items-center rounded-full bg-primary px-1.5 py-0.5 text-[10px] font-black leading-none text-white">
+        {unreadSupportConversationCount > 99
+          ? "99+"
+          : unreadSupportConversationCount}
+      </span>
+    )}
+</span>
             <svg
               className="h-4 w-4 text-ink-sub"
               viewBox="0 0 24 24"
