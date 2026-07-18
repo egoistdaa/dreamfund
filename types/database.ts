@@ -372,6 +372,12 @@ export interface Database {
           message_id: string;
         }[];
       };
+           mark_notification_read: {
+        Args: {
+          p_notification_id: string;
+        };
+        Returns: undefined;
+      };
 mark_backer_support_conversation_read: {
   Args: {
     p_conversation_id: string;
