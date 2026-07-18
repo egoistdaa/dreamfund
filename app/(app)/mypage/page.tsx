@@ -1,7 +1,10 @@
 ﻿import Link from "next/link";
 import { requireAuth } from "@/lib/auth/requireAuth";
 import { createServerSupabase } from "@/lib/supabase/server-auth";
-import { getCreatorUnreadSupportConversationCount } from "@/lib/data/supportMessages";
+import {
+  getBackerUnreadSupportConversationCount,
+  getCreatorUnreadSupportConversationCount,
+} from "@/lib/data/supportMessages";
 
 export const metadata = {
   title: "\u30de\u30a4\u30da\u30fc\u30b8",
@@ -27,8 +30,17 @@ export default async function MyPage() {
 
   const name = profile?.display_name ?? "\u540d\u79f0\u672a\u8a2d\u5b9a";
   const avatarUrl = profile?.avatar_url ?? null;
-  const unreadSupportConversationCount =
-  await getCreatorUnreadSupportConversationCount(user.id);
+  const [
+  creatorUnreadSupportConversationCount,
+  backerUnreadSupportConversationCount,
+] = await Promise.all([
+  getCreatorUnreadSupportConversationCount(user.id),
+  getBackerUnreadSupportConversationCount(user.id),
+]);
+
+const unreadSupportConversationCount =
+  creatorUnreadSupportConversationCount +
+  backerUnreadSupportConversationCount;
 
     const menuItems = [
     { label: "支援したプロジェクト", href: "#" },

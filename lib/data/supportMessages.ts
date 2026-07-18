@@ -316,6 +316,65 @@ export async function getCreatorUnreadSupportConversationCount(
 
   return unreadConversationIds.size;
 }
+export async function getBackerUnreadSupportConversationCount(
+  userId: string
+): Promise<number> {
+  const supabase = createServerSupabase();
+
+  const { data: conversationData, error: conversationError } =
+    await supabase
+      .from("support_conversations")
+      .select("id, backer_last_read_at")
+      .eq("backer_id", userId);
+
+  if (conversationError) {
+    throw conversationError;
+  }
+
+  const conversations = conversationData ?? [];
+
+  if (conversations.length === 0) {
+    return 0;
+  }
+
+  const conversationIds = conversations.map(
+    (conversation) => conversation.id
+  );
+
+  const { data: messageData, error: messageError } = await supabase
+    .from("support_messages")
+    .select("conversation_id, created_at")
+    .in("conversation_id", conversationIds)
+    .eq("message_type", "creator_reply");
+
+  if (messageError) {
+    throw messageError;
+  }
+
+  const backerLastReadAtByConversationId = new Map(
+    conversations.map((conversation) => [
+      conversation.id,
+      conversation.backer_last_read_at,
+    ])
+  );
+
+  const unreadConversationIds = new Set<string>();
+
+  for (const message of messageData ?? []) {
+    const backerLastReadAt =
+      backerLastReadAtByConversationId.get(message.conversation_id);
+
+    if (
+      !backerLastReadAt ||
+      new Date(message.created_at).getTime() >
+        new Date(backerLastReadAt).getTime()
+    ) {
+      unreadConversationIds.add(message.conversation_id);
+    }
+  }
+
+  return unreadConversationIds.size;
+}
 export type CreatorSupportConversationDetail = {
   id: string;
   projectId: string;
