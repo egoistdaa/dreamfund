@@ -82,7 +82,7 @@ function BackedProjectCard({
 
   return (
     <Link
-      href={`/projects/${item.projectSlug}`}
+      href={`/mypage/backed-projects/${item.pledgeId}`}
       className="overflow-hidden rounded-card border border-line bg-white transition active:scale-[.99]"
     >
       <div className="relative aspect-[16/9] overflow-hidden bg-sub">
