@@ -138,9 +138,6 @@ const unreadSupportConversationCount =
         </button>
       </form>
 
-      <p className="mt-6 text-center text-[11px] text-ink-sub">
-        {"\u652f\u63f4\u5c65\u6b74\u30fb\u6295\u7a3f\u30fb\u901a\u77e5\u306f\u4eca\u5f8c\u306e\u30d5\u30a7\u30fc\u30ba\u3067\u5b9f\u88c5\u4e88\u5b9a\u3067\u3059\u3002"}
-      </p>
     </div>
   );
 }
