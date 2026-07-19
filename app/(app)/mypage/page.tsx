@@ -43,7 +43,10 @@ const unreadSupportConversationCount =
   backerUnreadSupportConversationCount;
 
     const menuItems = [
-    { label: "支援したプロジェクト", href: "#" },
+    {
+  label: "支援したプロジェクト",
+  href: "/mypage/backed-projects",
+},
     {
       label: "💌 応援メッセージ",
       href: "/mypage/support-messages",
