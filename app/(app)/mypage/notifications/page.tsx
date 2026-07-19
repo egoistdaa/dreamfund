@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { requireAuth } from "@/lib/auth/requireAuth";
 import { getNotifications } from "@/lib/data/notifications";
+import { NotificationItemLink } from "@/components/notifications/NotificationItemLink";
 
 export const metadata = {
   title: "通知",
@@ -74,15 +75,17 @@ export default async function NotificationsPage() {
       ) : (
         <div className="flex flex-col gap-3">
           {notifications.map((notification) => (
-            <Link
-              key={notification.id}
-              href={notification.href}
-              className={`relative rounded-card border px-4 py-4 transition active:scale-[.99] ${
-                notification.isRead
-                  ? "border-line bg-white"
-                  : "border-primary/25 bg-primary/[.04]"
-              }`}
-            >
+            <NotificationItemLink
+  key={notification.id}
+  notificationId={notification.id}
+  href={notification.href}
+  isRead={notification.isRead}
+  className={`relative rounded-card border px-4 py-4 transition active:scale-[.99] ${
+    notification.isRead
+      ? "border-line bg-white"
+      : "border-primary/25 bg-primary/[.04]"
+  }`}
+>
               {!notification.isRead && (
                 <span className="absolute right-4 top-4 h-2.5 w-2.5 rounded-full bg-primary" />
               )}
@@ -106,7 +109,7 @@ export default async function NotificationsPage() {
               <div className="mt-3 text-[11px] font-medium text-ink-sub">
                 {formatNotificationDate(notification.createdAt)}
               </div>
-            </Link>
+            </NotificationItemLink>
           ))}
         </div>
       )}
