@@ -53,7 +53,7 @@ const unreadSupportConversationCount =
       href: "/mypage/submissions",
     },
     { label: "お気に入り", href: "/favorites" },
-    { label: "通知", href: "#" },
+    { label: "通知", href: "/mypage/notifications" },
     { label: "設定", href: "#" },
   ];
 
