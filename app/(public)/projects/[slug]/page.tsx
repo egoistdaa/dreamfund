@@ -158,7 +158,16 @@ export default async function ProjectDetailPage({ params }: { params: { slug: st
       <Section id="returns" title="リターン">
         {project.returns && project.returns.length > 0 ? (
           <div className="flex flex-col gap-3">
-            {project.returns.map((r) => <ReturnCard key={r.id} ret={r} slug={project.slug} />)}
+            {project.returns.map((r) => (
+  <ReturnCard
+    key={r.id}
+    ret={r}
+    slug={project.slug}
+    projectStatus={project.status}
+    startAt={project.startAt}
+    endAt={project.endAt}
+  />
+))}
           </div>
         ) : (
           <p className="rounded-card bg-sub px-4 py-8 text-center text-[13px] text-ink-sub">リターンは準備中です。</p>

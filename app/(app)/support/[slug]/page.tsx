@@ -104,7 +104,14 @@ export default async function SupportPage({
         {returns.length > 0 ? (
           <div className="space-y-3">
             {returns.map((ret) => (
-              <ReturnCard key={ret.id} ret={ret} slug={project.slug} />
+              <ReturnCard
+  key={ret.id}
+  ret={ret}
+  slug={project.slug}
+  projectStatus={project.status}
+  startAt={project.startAt}
+  endAt={project.endAt}
+/>
             ))}
           </div>
         ) : (

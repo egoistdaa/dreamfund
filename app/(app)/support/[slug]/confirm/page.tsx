@@ -35,8 +35,39 @@ export default async function SupportConfirmPage({
     notFound();
   }
 
-  const selectedReturn = project.returns?.find((r) => r.id === searchParams.return);
-  const rate = achievementRate(project);
+  const selectedReturn = project.returns?.find(
+  (r) => r.id === searchParams.return
+);
+
+const rate = achievementRate(project);
+const now = Date.now();
+
+const startTime = project.startAt
+  ? new Date(project.startAt).getTime()
+  : null;
+
+const endTime = project.endAt
+  ? new Date(project.endAt).getTime()
+  : null;
+
+const isBeforeStart =
+  startTime !== null &&
+  !Number.isNaN(startTime) &&
+  startTime > now;
+
+const isAfterEnd =
+  endTime !== null &&
+  !Number.isNaN(endTime) &&
+  endTime <= now;
+
+const canSupport =
+  project.status === "live" &&
+  !isBeforeStart &&
+  !isAfterEnd;
+
+const soldOut =
+  selectedReturn?.stockTotal != null &&
+  selectedReturn.stockSold >= selectedReturn.stockTotal;
 
   return (
     <div className="px-[18px] py-6">
@@ -107,20 +138,21 @@ export default async function SupportConfirmPage({
         )}
       </div>
 
-      {selectedReturn && (
-        <div className="mb-5 flex items-center justify-between rounded-card bg-sub p-4">
-          <span className="text-[13px] font-bold">支援金額</span>
-          <span className="text-xl font-black text-brand">
-            {formatYen(selectedReturn.price)}
-          </span>
-        </div>
-      )}
+        {selectedReturn && !canSupport && (
+  <div className="mb-5 rounded-lg bg-slate-100 px-3 py-3 text-center text-[13px] font-bold text-slate-600">
+    {isBeforeStart
+      ? "このプロジェクトはまだ募集開始前です。"
+      : "このプロジェクトの募集は終了しました。"}
+  </div>
+)}
 
-      <div className="mb-5 rounded-lg bg-warning/10 px-3 py-2.5 text-[12px] font-bold text-warning">
-        🚧 決済機能は次フェーズで実装します。現在はボタンを押しても課金されません。
-      </div>
+{selectedReturn && canSupport && soldOut && (
+  <div className="mb-5 rounded-lg bg-slate-100 px-3 py-3 text-center text-[13px] font-bold text-slate-600">
+    このリターンは売り切れています。
+  </div>
+)}
 
-      {selectedReturn && (
+{selectedReturn && canSupport && !soldOut && (
   <ConfirmSupportButton
     projectSlug={project.slug}
     returnId={selectedReturn.id}
