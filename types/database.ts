@@ -350,6 +350,13 @@ export interface Database {
           amount: number;
         }[];
       };
+      finalize_expired_projects: {
+  Args: Record<PropertyKey, never>;
+  Returns: {
+    project_id: string;
+    finalized_status: ProjectStatusDB;
+  }[];
+};
 
       send_support_message: {
         Args: {
