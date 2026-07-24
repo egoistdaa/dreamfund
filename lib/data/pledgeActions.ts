@@ -82,9 +82,7 @@ export async function createPendingPledge(
       {
         amount,
         currency: "jpy",
-        automatic_payment_methods: {
-          enabled: true,
-        },
+        payment_method_types: ["card"],
         description: `DreamFund支援：${projectSlug}`,
         metadata: {
           pledge_id: pledgeId,
