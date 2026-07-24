@@ -19,6 +19,22 @@ export type PledgeStatusDB =
   | "refunded"
   | "failed";
 
+export type RefundStatusDB =
+  | "requested"
+  | "approved"
+  | "processing"
+  | "done"
+  | "rejected";
+
+export type ProjectSettlementStatusDB =
+  | "checking"
+  | "waiting_for_payments"
+  | "locked_succeeded"
+  | "locked_failed"
+  | "refunding"
+  | "completed"
+  | "manual_review";
+
 export type SupportMessageTypeDB =
   | "support"
   | "creator_reply";
@@ -198,6 +214,96 @@ export interface Database {
         };
         Update: Partial<
           Database["public"]["Tables"]["pledges"]["Insert"]
+        >;
+        Relationships: [];
+      };
+      project_settlements: {
+        Row: {
+          id: string;
+          project_id: string;
+          status: ProjectSettlementStatusDB;
+          final_status: ProjectStatusDB | null;
+          unresolved_payment_count: number;
+          locked_current_amount: number | null;
+          locked_supporters_count: number | null;
+          last_checked_at: string | null;
+          next_check_at: string | null;
+          settlement_locked_at: string | null;
+          refund_eligible_at: string | null;
+          attempt_count: number;
+          last_error: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          project_id: string;
+          status?: ProjectSettlementStatusDB;
+          final_status?: ProjectStatusDB | null;
+          unresolved_payment_count?: number;
+          locked_current_amount?: number | null;
+          locked_supporters_count?: number | null;
+          last_checked_at?: string | null;
+          next_check_at?: string | null;
+          settlement_locked_at?: string | null;
+          refund_eligible_at?: string | null;
+          attempt_count?: number;
+          last_error?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<
+          Database["public"]["Tables"]["project_settlements"]["Insert"]
+        >;
+        Relationships: [];
+      };
+      refunds: {
+        Row: {
+          id: string;
+          pledge_id: string;
+          project_id: string;
+          reason: string | null;
+          amount: number;
+          status: RefundStatusDB;
+          stripe_refund_id: string | null;
+          idempotency_key: string;
+          stripe_status: string | null;
+          processed_by: string | null;
+          attempt_count: number;
+          last_error: string | null;
+          next_retry_at: string | null;
+          approved_at: string | null;
+          processing_started_at: string | null;
+          succeeded_at: string | null;
+          manual_review_required: boolean;
+          manual_review_reason: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          pledge_id: string;
+          project_id: string;
+          reason?: string | null;
+          amount: number;
+          status?: RefundStatusDB;
+          stripe_refund_id?: string | null;
+          idempotency_key: string;
+          stripe_status?: string | null;
+          processed_by?: string | null;
+          attempt_count?: number;
+          last_error?: string | null;
+          next_retry_at?: string | null;
+          approved_at?: string | null;
+          processing_started_at?: string | null;
+          succeeded_at?: string | null;
+          manual_review_required?: boolean;
+          manual_review_reason?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<
+          Database["public"]["Tables"]["refunds"]["Insert"]
         >;
         Relationships: [];
       };
