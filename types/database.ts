@@ -211,6 +211,8 @@ export interface Database {
           fee_amount?: number;
           status?: PledgeStatusDB;
           stripe_payment_intent_id?: string | null;
+          created_at?: string;
+          updated_at?: string;
         };
         Update: Partial<
           Database["public"]["Tables"]["pledges"]["Insert"]

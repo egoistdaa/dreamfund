@@ -1,6 +1,7 @@
 import "server-only";
 
 import { createClient } from "@supabase/supabase-js";
+import type { Database } from "@/types/database";
 
 export function createAdminSupabase() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -14,7 +15,7 @@ export function createAdminSupabase() {
     throw new Error("SUPABASE_SECRET_KEY が設定されていません");
   }
 
-  return createClient(supabaseUrl, secretKey, {
+  return createClient<Database>(supabaseUrl, secretKey, {
     auth: {
       persistSession: false,
       autoRefreshToken: false,
