@@ -465,6 +465,20 @@ export interface Database {
     finalized_status: ProjectStatusDB;
   }[];
 };
+      lock_project_settlement: {
+        Args: {
+          p_project_id: string;
+        };
+        Returns: {
+          locked: boolean;
+          project_id: string;
+          settlement_status: string;
+          final_status: ProjectStatusDB | null;
+          unresolved_payment_count: number;
+          refund_count: number;
+          settlement_locked_at: string | null;
+        }[];
+      };
 
       send_support_message: {
         Args: {
