@@ -220,7 +220,7 @@ async function syncPendingPledge(
     };
 }
 
-export async function GET(request: Request) {
+export async function POST(request: Request) {
     const cronSecret = process.env.CRON_SECRET;
     const authorization =
         request.headers.get("authorization");
@@ -279,18 +279,18 @@ export async function GET(request: Request) {
         }
 
         const blockedProjectIds = new Set(
-  (existingSettlements ?? [])
-    .filter(
-      (settlement) =>
-        settlement.settlement_locked_at !== null ||
-        settlement.status === "manual_review"
-    )
-    .map((settlement) => settlement.project_id)
-);
+            (existingSettlements ?? [])
+                .filter(
+                    (settlement) =>
+                        settlement.settlement_locked_at !== null ||
+                        settlement.status === "manual_review"
+                )
+                .map((settlement) => settlement.project_id)
+        );
 
-const candidateProjects = endedProjects.filter(
-  (project) => !blockedProjectIds.has(project.id)
-);
+        const candidateProjects = endedProjects.filter(
+            (project) => !blockedProjectIds.has(project.id)
+        );
 
         const results = [];
 
@@ -390,102 +390,102 @@ const candidateProjects = endedProjects.filter(
 
                 continue;
             }
-                  const {
-        data: latestProject,
-        error: latestProjectError,
-      } = await adminSupabase
-        .from("projects")
-        .select("current_amount")
-        .eq("id", project.id)
-        .single();
+            const {
+                data: latestProject,
+                error: latestProjectError,
+            } = await adminSupabase
+                .from("projects")
+                .select("current_amount")
+                .eq("id", project.id)
+                .single();
 
-      if (latestProjectError) {
-        results.push({
-          projectId: project.id,
-          slug: project.slug,
-          success: false,
-          pledgeResults,
-          error: latestProjectError.message,
-        });
+            if (latestProjectError) {
+                results.push({
+                    projectId: project.id,
+                    slug: project.slug,
+                    success: false,
+                    pledgeResults,
+                    error: latestProjectError.message,
+                });
 
-        continue;
-      }
-      const {
-        data: paidPledges,
-        error: paidPledgeError,
-      } = await adminSupabase
-        .from("pledges")
-        .select("amount")
-        .eq("project_id", project.id)
-        .eq("status", "paid");
+                continue;
+            }
+            const {
+                data: paidPledges,
+                error: paidPledgeError,
+            } = await adminSupabase
+                .from("pledges")
+                .select("amount")
+                .eq("project_id", project.id)
+                .eq("status", "paid");
 
-      if (paidPledgeError) {
-        results.push({
-          projectId: project.id,
-          slug: project.slug,
-          success: false,
-          pledgeResults,
-          error: paidPledgeError.message,
-        });
+            if (paidPledgeError) {
+                results.push({
+                    projectId: project.id,
+                    slug: project.slug,
+                    success: false,
+                    pledgeResults,
+                    error: paidPledgeError.message,
+                });
 
-        continue;
-      }
+                continue;
+            }
 
-      const paidAmount = (paidPledges ?? []).reduce(
-        (total, pledge) => total + pledge.amount,
-        0
-      );
-
-      if (paidAmount !== latestProject.current_amount) {
-        const now = new Date();
-        const mismatchMessage =
-          `表示金額とpaid支援合計が一致しません: ` +
-          `current_amount=${latestProject.current_amount}, ` +
-          `paid_amount=${paidAmount}`;
-
-        const { error: manualReviewError } =
-          await adminSupabase
-            .from("project_settlements")
-            .upsert(
-              {
-                project_id: project.id,
-                status: "manual_review",
-                unresolved_payment_count: 0,
-                last_checked_at: now.toISOString(),
-                next_check_at: null,
-                last_error: mismatchMessage,
-                updated_at: now.toISOString(),
-              },
-              {
-                onConflict: "project_id",
-              }
+            const paidAmount = (paidPledges ?? []).reduce(
+                (total, pledge) => total + pledge.amount,
+                0
             );
 
-        if (manualReviewError) {
-          results.push({
-            projectId: project.id,
-            slug: project.slug,
-            success: false,
-            pledgeResults,
-            error: manualReviewError.message,
-          });
+            if (paidAmount !== latestProject.current_amount) {
+                const now = new Date();
+                const mismatchMessage =
+                    `表示金額とpaid支援合計が一致しません: ` +
+                    `current_amount=${latestProject.current_amount}, ` +
+                    `paid_amount=${paidAmount}`;
 
-          continue;
-        }
+                const { error: manualReviewError } =
+                    await adminSupabase
+                        .from("project_settlements")
+                        .upsert(
+                            {
+                                project_id: project.id,
+                                status: "manual_review",
+                                unresolved_payment_count: 0,
+                                last_checked_at: now.toISOString(),
+                                next_check_at: null,
+                                last_error: mismatchMessage,
+                                updated_at: now.toISOString(),
+                            },
+                            {
+                                onConflict: "project_id",
+                            }
+                        );
 
-        results.push({
-          projectId: project.id,
-          slug: project.slug,
-          success: true,
-          manualReviewRequired: true,
-          pledgeResults,
-          currentAmount: latestProject.current_amount,
-          paidAmount,
-          lockResult: null,
-        });
+                if (manualReviewError) {
+                    results.push({
+                        projectId: project.id,
+                        slug: project.slug,
+                        success: false,
+                        pledgeResults,
+                        error: manualReviewError.message,
+                    });
 
-        continue;
-      }
+                    continue;
+                }
+
+                results.push({
+                    projectId: project.id,
+                    slug: project.slug,
+                    success: true,
+                    manualReviewRequired: true,
+                    pledgeResults,
+                    currentAmount: latestProject.current_amount,
+                    paidAmount,
+                    lockResult: null,
+                });
+
+                continue;
+            }
 
             const { data: lockData, error: lockError } =
                 await adminSupabase.rpc(
