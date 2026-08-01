@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Supabase繝・・繝悶Ν縺ｮ蝙九Ｔchema.sql 縺ｮ繧ｫ繝ｩ繝縺ｫ蟇ｾ蠢懊・ * supabase-js 縺悟梛繧呈ｭ｣縺励￥隗｣豎ｺ縺吶ｋ縺溘ａ縲ヽelationships / Views / Functions /
  * Enums / CompositeTypes 繧ょｮ夂ｾｩ縺励※縺・ｋ縲・ */
 
@@ -477,6 +477,49 @@ export interface Database {
           unresolved_payment_count: number;
           refund_count: number;
           settlement_locked_at: string | null;
+        }[];
+      };
+
+      claim_next_refund: {
+        Args: Record<PropertyKey, never>;
+        Returns: {
+          refund_id: string;
+          pledge_id: string;
+          project_id: string;
+          amount: number;
+          stripe_payment_intent_id: string;
+          idempotency_key: string;
+          attempt_count: number;
+        }[];
+      };
+
+      release_refund_claim: {
+        Args: {
+          p_refund_id: string;
+          p_error: string;
+          p_retry_after_seconds?: number;
+        };
+        Returns: {
+          refund_id: string;
+          refund_status: RefundStatusDB;
+          manual_review_required: boolean;
+          next_retry_at: string | null;
+        }[];
+      };
+
+      apply_stripe_refund_status: {
+        Args: {
+          p_refund_id: string;
+          p_stripe_refund_id: string;
+          p_stripe_status: string;
+          p_failure_reason?: string | null;
+        };
+        Returns: {
+          refund_id: string;
+          refund_status: RefundStatusDB;
+          stripe_status: string | null;
+          manual_review_required: boolean;
+          settlement_status: string;
         }[];
       };
 
