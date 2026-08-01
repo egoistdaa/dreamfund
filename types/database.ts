@@ -480,6 +480,20 @@ export interface Database {
         }[];
       };
 
+      apply_payment_intent_succeeded: {
+        Args: {
+          p_pledge_id: string;
+          p_stripe_payment_intent_id: string;
+        };
+        Returns: {
+          pledge_id: string;
+          pledge_status: PledgeStatusDB;
+          settlement_status: string | null;
+          refund_id: string | null;
+          action: string;
+        }[];
+      };
+
       claim_next_refund: {
         Args: Record<PropertyKey, never>;
         Returns: {
