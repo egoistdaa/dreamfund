@@ -2,11 +2,15 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 
 /**
- * 管理画面共通レイアウト。
- * 一般ユーザー向けのスマホ枠・TabBar は使わず、PC幅で作業しやすい構成にする。
- * 将来 /admin/submissions/[id]（承認・見送り・審査メモ）が増える前提の土台。
+ * 管理画面共通レイアウト
+ * 一般ユーザー向けのヘッダーやタブバーを使わず、
+ * 管理作業に集中しやすい構成にしています。
  */
-export default function AdminLayout({ children }: { children: ReactNode }) {
+export default function AdminLayout({
+  children,
+}: {
+  children: ReactNode;
+}) {
   return (
     <div className="min-h-screen bg-slate-50">
       <header className="sticky top-0 z-50 border-b border-slate-200 bg-white">
@@ -26,6 +30,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
                 <path d="M12 2l7 4v6c0 5-3 8-7 10-4-2-7-5-7-10V6z" />
               </svg>
             </span>
+
             DreamFund 管理
           </Link>
 
@@ -35,6 +40,13 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
               className="rounded-lg px-3 py-2 text-slate-700 hover:bg-slate-100"
             >
               投稿審査
+            </Link>
+
+            <Link
+              href="/admin/refunds"
+              className="rounded-lg px-3 py-2 text-slate-700 hover:bg-slate-100"
+            >
+              返金管理
             </Link>
           </nav>
 
@@ -56,7 +68,9 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
         </div>
       </header>
 
-      <main className="mx-auto max-w-6xl px-6 py-8">{children}</main>
+      <main className="mx-auto max-w-6xl px-6 py-8">
+        {children}
+      </main>
     </div>
   );
 }
