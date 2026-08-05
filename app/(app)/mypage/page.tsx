@@ -22,11 +22,23 @@ export default async function MyPage() {
     .eq("id", user.id)
     .maybeSingle();
 
+  const { data: privateProfileData } = await supabase
+    .from("profiles_private")
+    .select("role")
+    .eq("id", user.id)
+    .maybeSingle();
+
   const profile = profileData as {
     display_name: string;
     avatar_url: string | null;
     bio: string | null;
   } | null;
+
+  const privateProfile = privateProfileData as {
+    role: string | null;
+  } | null;
+
+  const isAdmin = privateProfile?.role === "admin";
 
   const name = profile?.display_name ?? "\u540d\u79f0\u672a\u8a2d\u5b9a";
   const avatarUrl = profile?.avatar_url ?? null;
@@ -42,11 +54,11 @@ const unreadSupportConversationCount =
   creatorUnreadSupportConversationCount +
   backerUnreadSupportConversationCount;
 
-    const menuItems = [
+  const menuItems = [
     {
-  label: "支援したプロジェクト",
-  href: "/mypage/backed-projects",
-},
+      label: "支援したプロジェクト",
+      href: "/mypage/backed-projects",
+    },
     {
       label: "💌 応援メッセージ",
       href: "/mypage/support-messages",
@@ -57,6 +69,14 @@ const unreadSupportConversationCount =
     },
     { label: "お気に入り", href: "/favorites" },
     { label: "通知", href: "/mypage/notifications" },
+    ...(isAdmin
+      ? [
+          {
+            label: "管理画面",
+            href: "/admin",
+          },
+        ]
+      : []),
     { label: "設定", href: "#" },
   ];
 

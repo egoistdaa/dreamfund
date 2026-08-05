@@ -16,7 +16,7 @@ export default function AdminLayout({
       <header className="sticky top-0 z-50 border-b border-slate-200 bg-white">
         <div className="mx-auto flex max-w-6xl items-center gap-4 px-6 py-3.5">
           <Link
-            href="/admin/submissions"
+            href="/admin"
             className="flex items-center gap-2 text-[15px] font-black tracking-tight"
           >
             <span className="grid h-7 w-7 place-items-center rounded-lg bg-slate-900 text-white">
