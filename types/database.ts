@@ -219,6 +219,30 @@ export interface Database {
         >;
         Relationships: [];
       };
+      admin_audit_logs: {
+        Row: {
+          id: string;
+          actor_user_id: string;
+          action: string;
+          target_type: string;
+          target_id: string | null;
+          details: Json;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          actor_user_id: string;
+          action: string;
+          target_type: string;
+          target_id?: string | null;
+          details?: Json;
+          created_at?: string;
+        };
+        Update: Partial<
+          Database["public"]["Tables"]["admin_audit_logs"]["Insert"]
+        >;
+        Relationships: [];
+      };
       project_settlements: {
         Row: {
           id: string;
