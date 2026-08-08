@@ -426,9 +426,12 @@ export default async function AdminSettlementsPage({
                       >
                         <td className="px-5 py-4">
                           <div className="max-w-[300px]">
-                            <div className="line-clamp-2 text-[13px] font-bold text-slate-900">
+                            <Link
+                              href={`/admin/settlements/${settlement.id}`}
+                              className="line-clamp-2 text-[13px] font-bold text-slate-900 transition hover:text-slate-600 hover:underline"
+                            >
                               {settlement.projectTitle}
-                            </div>
+                            </Link>
 
                             <div className="mt-1 font-mono text-[10px] text-slate-400">
                               {settlement.projectSlug ??
