@@ -12,6 +12,10 @@ const navItems = [
     href: "/admin/refunds",
     label: "返金管理",
   },
+  {
+    href: "/admin/settlements",
+    label: "精算管理",
+  },
 ];
 
 export default function AdminNav() {
