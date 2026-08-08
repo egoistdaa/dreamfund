@@ -1,6 +1,7 @@
 ﻿import Link from "next/link";
 import { requireAdmin } from "@/lib/auth/requireAdmin";
 import { getAdminRefunds } from "@/lib/data/adminRefunds";
+import { getAdminSettlements } from "@/lib/data/adminSettlements";
 import { getPendingSubmissions } from "@/lib/data/adminSubmissions";
 import { formatYen } from "@/lib/format";
 
@@ -116,31 +117,42 @@ function ManagementCard({
 export default async function AdminDashboardPage() {
   await requireAdmin();
 
-  const [submissions, refundData] = await Promise.all([
-    getPendingSubmissions(),
-    getAdminRefunds(),
-  ]);
+  const [submissions, refundData, settlementData] =
+    await Promise.all([
+      getPendingSubmissions(),
+      getAdminRefunds(),
+      getAdminSettlements(),
+    ]);
 
-  const { summary } = refundData;
+  const refundSummary = refundData.summary;
+  const settlementSummary = settlementData.summary;
+
+  const refundAttentionCount =
+    refundSummary.approvedCount +
+    refundSummary.processingCount +
+    refundSummary.manualReviewCount;
+
+  const settlementAttentionCount =
+    settlementSummary.manualReviewCount;
+
   const needsAttention =
     submissions.length +
-    summary.approvedCount +
-    summary.processingCount +
-    summary.manualReviewCount;
+    refundAttentionCount +
+    settlementAttentionCount;
 
   return (
     <div>
       <div className="mb-7">
-        <p className="text-[11px] font-extrabold uppercase tracking-[0.18em] text-slate-400">
+        <div className="text-[11px] font-black uppercase tracking-[0.18em] text-slate-400">
           Administration
-        </p>
+        </div>
 
         <h1 className="mt-2 text-2xl font-black tracking-tight text-slate-900">
           管理ダッシュボード
         </h1>
 
         <p className="mt-1 text-[13px] leading-6 text-slate-500">
-          投稿審査や返金状況など、運営上確認が必要な項目をまとめて確認できます。
+          投稿審査、返金、精算など、運営上確認が必要な項目をまとめて確認できます。
         </p>
       </div>
 
@@ -160,7 +172,7 @@ export default async function AdminDashboardPage() {
         </div>
 
         <p className="mt-2 text-[11px] leading-5 text-slate-400">
-          審査待ち、返金待ち、返金処理中、手動確認を合計しています。
+          審査待ち、返金待ち・処理中・手動確認、精算の手動確認を合計しています。
         </p>
       </div>
 
@@ -173,40 +185,54 @@ export default async function AdminDashboardPage() {
         />
 
         <SummaryCard
-          label="返金待ち"
-          value={`${summary.approvedCount}件`}
-          description="Stripe返金処理の開始待ち"
-          alert={summary.approvedCount > 0}
+          label="返金 要確認"
+          value={`${refundAttentionCount}件`}
+          description={`待ち ${refundSummary.approvedCount}件・処理中 ${refundSummary.processingCount}件・手動確認 ${refundSummary.manualReviewCount}件`}
+          alert={refundAttentionCount > 0}
         />
 
         <SummaryCard
-          label="返金処理中"
-          value={`${summary.processingCount}件`}
-          description="現在Stripeで処理している返金"
-          alert={summary.processingCount > 0}
+          label="精算 手動確認"
+          value={`${settlementSummary.manualReviewCount}件`}
+          description="自動精算を止めて確認するプロジェクト"
+          alert={settlementSummary.manualReviewCount > 0}
         />
 
         <SummaryCard
-          label="手動確認"
-          value={`${summary.manualReviewCount}件`}
-          description="自動処理を止めて確認する返金"
-          alert={summary.manualReviewCount > 0}
+          label="未解決決済"
+          value={`${settlementSummary.unresolvedPaymentCount}件`}
+          description="最新最大100件の精算レコード内"
+          alert={settlementSummary.unresolvedPaymentCount > 0}
         />
       </div>
 
-      <div className="mt-4 grid gap-4 sm:grid-cols-2">
+      <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <SummaryCard
           label="返金完了"
-          value={`${summary.completedCount}件`}
-          description={`完了金額 ${formatYen(summary.completedAmount)}`}
+          value={`${refundSummary.completedCount}件`}
+          description={`完了金額 ${formatYen(
+            refundSummary.completedAmount
+          )}`}
         />
 
         <SummaryCard
           label="返金レコード"
-          value={`${summary.totalCount}件`}
+          value={`${refundSummary.totalCount}件`}
           description={`最新最大100件・合計 ${formatYen(
-            summary.totalAmount
+            refundSummary.totalAmount
           )}`}
+        />
+
+        <SummaryCard
+          label="精算完了"
+          value={`${settlementSummary.completedCount}件`}
+          description="最新最大100件の精算レコード内"
+        />
+
+        <SummaryCard
+          label="精算レコード"
+          value={`${settlementSummary.totalCount}件`}
+          description={`成立確定 ${settlementSummary.lockedSucceededCount}件・不成立確定 ${settlementSummary.lockedFailedCount}件`}
         />
       </div>
 
@@ -221,7 +247,7 @@ export default async function AdminDashboardPage() {
           </p>
         </div>
 
-        <div className="grid gap-4 md:grid-cols-2">
+        <div className="grid gap-4 md:grid-cols-3">
           <ManagementCard
             href="/admin/submissions"
             title="投稿審査"
@@ -234,12 +260,16 @@ export default async function AdminDashboardPage() {
             href="/admin/refunds"
             title="返金管理"
             description="返金状況、再試行、手動確認が必要なレコードを確認します。"
-            countText={`要確認 ${
-              summary.approvedCount +
-              summary.processingCount +
-              summary.manualReviewCount
-            }件`}
-            alert={summary.manualReviewCount > 0}
+            countText={`要確認 ${refundAttentionCount}件`}
+            alert={refundAttentionCount > 0}
+          />
+
+          <ManagementCard
+            href="/admin/settlements"
+            title="精算管理"
+            description="プロジェクト終了後の成立判定、決済確認、返金連携などを確認します。"
+            countText={`手動確認 ${settlementSummary.manualReviewCount}件`}
+            alert={settlementSummary.manualReviewCount > 0}
           />
         </div>
       </div>
