@@ -1,4 +1,5 @@
 import Link from "next/link";
+import AdminNav from "./AdminNav";
 import type { ReactNode } from "react";
 
 /**
@@ -34,21 +35,7 @@ export default function AdminLayout({
             DreamFund 管理
           </Link>
 
-          <nav className="ml-6 flex items-center gap-1 text-[13px] font-bold">
-            <Link
-              href="/admin/submissions"
-              className="rounded-lg px-3 py-2 text-slate-700 hover:bg-slate-100"
-            >
-              投稿審査
-            </Link>
-
-            <Link
-              href="/admin/refunds"
-              className="rounded-lg px-3 py-2 text-slate-700 hover:bg-slate-100"
-            >
-              返金管理
-            </Link>
-          </nav>
+          <AdminNav />
 
           <div className="ml-auto flex items-center gap-3">
             <Link
