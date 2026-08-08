@@ -1,4 +1,5 @@
-﻿import { requireAdmin } from "@/lib/auth/requireAdmin";
+﻿import Link from "next/link";
+import { requireAdmin } from "@/lib/auth/requireAdmin";
 import {
   getAdminSettlements,
   type AdminSettlement,
@@ -12,6 +13,80 @@ export const metadata = {
     follow: false,
   },
 };
+
+type SettlementFilter =
+  | "all"
+  | "manual_review"
+  | "pending"
+  | "refunding"
+  | "locked_succeeded"
+  | "locked_failed"
+  | "completed";
+
+const settlementFilterOptions: {
+  value: SettlementFilter;
+  label: string;
+}[] = [
+  { value: "all", label: "すべて" },
+  { value: "manual_review", label: "手動確認" },
+  { value: "pending", label: "確認・決済待ち" },
+  { value: "refunding", label: "返金中" },
+  { value: "locked_succeeded", label: "成立確定" },
+  { value: "locked_failed", label: "不成立確定" },
+  { value: "completed", label: "精算完了" },
+];
+
+function normalizeSettlementFilter(
+  value: string | string[] | undefined
+): SettlementFilter {
+  const candidate = Array.isArray(value)
+    ? value[0]
+    : value;
+
+  switch (candidate) {
+    case "manual_review":
+    case "pending":
+    case "refunding":
+    case "locked_succeeded":
+    case "locked_failed":
+    case "completed":
+      return candidate;
+
+    default:
+      return "all";
+  }
+}
+
+function matchesSettlementFilter(
+  settlement: AdminSettlement,
+  filter: SettlementFilter
+): boolean {
+  switch (filter) {
+    case "manual_review":
+      return settlement.settlementStatus === "manual_review";
+
+    case "pending":
+      return (
+        settlement.settlementStatus === "checking" ||
+        settlement.settlementStatus === "waiting_for_payments"
+      );
+
+    case "refunding":
+      return settlement.settlementStatus === "refunding";
+
+    case "locked_succeeded":
+      return settlement.settlementStatus === "locked_succeeded";
+
+    case "locked_failed":
+      return settlement.settlementStatus === "locked_failed";
+
+    case "completed":
+      return settlement.settlementStatus === "completed";
+
+    case "all":
+      return true;
+  }
+}
 
 function formatDateTime(
   value: string | null
@@ -148,11 +223,29 @@ function SummaryCard({
   );
 }
 
-export default async function AdminSettlementsPage() {
+export default async function AdminSettlementsPage({
+  searchParams,
+}: {
+  searchParams?: {
+    filter?: string | string[];
+  };
+}) {
   await requireAdmin();
+
+  const activeFilter = normalizeSettlementFilter(
+    searchParams?.filter
+  );
 
   const { settlements, summary } =
     await getAdminSettlements();
+
+  const filteredSettlements = settlements.filter(
+    (settlement) =>
+      matchesSettlementFilter(
+        settlement,
+        activeFilter
+      )
+  );
 
   return (
     <div>
@@ -213,16 +306,60 @@ export default async function AdminSettlementsPage() {
       </div>
 
       <div className="mt-7">
-        {settlements.length === 0 ? (
+        <div className="mb-4 rounded-2xl bg-white p-4 ring-1 ring-slate-200">
+          <div className="mb-3 text-[11px] font-bold text-slate-500">
+            精算状態で絞り込み
+          </div>
+
+          <div className="flex flex-wrap gap-2">
+            {settlementFilterOptions.map((option) => {
+              const isActive =
+                activeFilter === option.value;
+
+              const href =
+                option.value === "all"
+                  ? "/admin/settlements"
+                  : `/admin/settlements?filter=${option.value}`;
+
+              return (
+                <Link
+                  key={option.value}
+                  href={href}
+                  aria-current={
+                    isActive ? "page" : undefined
+                  }
+                  className={`rounded-full px-3.5 py-2 text-[11px] font-extrabold transition ${
+                    isActive
+                      ? "bg-slate-900 text-white"
+                      : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                  }`}
+                >
+                  {option.label}
+                </Link>
+              );
+            })}
+          </div>
+
+          <div className="mt-3 text-[10.5px] text-slate-400">
+            表示中 {filteredSettlements.length}件 / 全{" "}
+            {settlements.length}件
+          </div>
+        </div>
+
+        {filteredSettlements.length === 0 ? (
           <div className="rounded-2xl bg-white px-6 py-20 text-center ring-1 ring-slate-200">
             <div className="text-3xl">✓</div>
 
             <p className="mt-3 text-sm font-bold text-slate-700">
-              精算レコードはありません
+              {settlements.length === 0
+                ? "精算レコードはありません"
+                : "条件に一致する精算はありません"}
             </p>
 
             <p className="mt-1 text-xs text-slate-500">
-              精算対象が作成されると、ここに表示されます。
+              {settlements.length === 0
+                ? "精算対象が作成されると、ここに表示されます。"
+                : "別の絞り込み条件を選択してください。"}
             </p>
           </div>
         ) : (
@@ -268,7 +405,7 @@ export default async function AdminSettlementsPage() {
                 </thead>
 
                 <tbody className="divide-y divide-slate-100">
-                  {settlements.map((settlement) => {
+                  {filteredSettlements.map((settlement) => {
                     const badge =
                       getSettlementStatusBadge(
                         settlement.settlementStatus
