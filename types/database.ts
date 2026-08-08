@@ -504,6 +504,19 @@ export interface Database {
         }[];
       };
 
+      admin_request_settlement_recheck: {
+        Args: {
+          p_settlement_id: string;
+          p_actor_user_id: string;
+          p_reason: string;
+        };
+        Returns: {
+          requested: boolean;
+          settlement_id: string;
+          project_id: string;
+          settlement_status: string;
+        }[];
+      };
       apply_payment_intent_succeeded: {
         Args: {
           p_pledge_id: string;
