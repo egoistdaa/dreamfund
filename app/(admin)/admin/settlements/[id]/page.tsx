@@ -7,8 +7,10 @@ import {
   type AdminSettlementPledge,
   type AdminSettlementRefund,
 } from "@/lib/data/adminSettlements";
+import { getAdminAuditLogsForTarget } from "@/lib/data/adminAuditLogs";
 import { formatYen } from "@/lib/format";
 import { SettlementRecheckActions } from "@/components/admin/SettlementRecheckActions";
+import { SettlementAuditLogHistory } from "@/components/admin/SettlementAuditLogHistory";
 
 export const metadata = {
   title: "精算詳細 | DreamFund 管理",
@@ -202,6 +204,13 @@ export default async function AdminSettlementDetailPage({
     refundedPledgeCount,
     displayedAmountDifference,
   } = detail;
+
+  const auditLogs =
+    await getAdminAuditLogsForTarget(
+      "project_settlement",
+      settlement.id,
+      50
+    );
 
   const settlementBadge =
     getSettlementBadge(
@@ -703,6 +712,8 @@ export default async function AdminSettlementDetailPage({
           </div>
         )}
       </section>
+
+      <SettlementAuditLogHistory logs={auditLogs} />
     </div>
   );
 }
