@@ -8,6 +8,7 @@ import {
   type AdminSettlementRefund,
 } from "@/lib/data/adminSettlements";
 import { formatYen } from "@/lib/format";
+import { SettlementRecheckActions } from "@/components/admin/SettlementRecheckActions";
 
 export const metadata = {
   title: "精算詳細 | DreamFund 管理",
@@ -211,6 +212,15 @@ export default async function AdminSettlementDetailPage({
     displayedAmountDifference !== null &&
     displayedAmountDifference !== 0;
 
+  const canRequestRecheck =
+    settlement.settlementStatus === "manual_review" &&
+    settlement.settlementLockedAt === null &&
+    settlement.finalStatus === null &&
+    settlement.lockedCurrentAmount === null &&
+    settlement.lockedSupportersCount === null &&
+    settlement.refundEligibleAt === null &&
+    refunds.length === 0;
+
   return (
     <div>
       <Link
@@ -262,6 +272,38 @@ export default async function AdminSettlementDetailPage({
         </div>
       ) : null}
 
+      {settlement.settlementStatus === "manual_review" ? (
+        <section className="mt-6 rounded-2xl bg-white p-6 ring-1 ring-rose-200">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <h2 className="text-[15px] font-black text-slate-900">
+                管理者アクション
+              </h2>
+
+              <p className="mt-1 text-[11px] leading-5 text-slate-500">
+                手動確認中の精算です。状態を確認してから操作してください。
+              </p>
+            </div>
+
+            <span className="shrink-0 rounded-full bg-rose-100 px-2.5 py-1 text-[10.5px] font-extrabold text-rose-700">
+              要手動確認
+            </span>
+          </div>
+
+          {canRequestRecheck ? (
+            <div className="mt-5 border-t border-slate-100 pt-5">
+              <SettlementRecheckActions
+                settlementId={settlement.id}
+              />
+            </div>
+          ) : (
+            <div className="mt-5 rounded-xl bg-slate-50 px-4 py-3 text-[12px] leading-5 text-slate-600">
+              この精算はロック済み・確定済み・返金レコードあり等のため、
+              管理画面から再確認を開始できません。
+            </div>
+          )}
+        </section>
+      ) : null}
       <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <div className="rounded-2xl bg-white p-5 ring-1 ring-slate-200">
           <div className="text-[11px] font-bold text-slate-400">
