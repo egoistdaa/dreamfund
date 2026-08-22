@@ -303,6 +303,7 @@ export interface Database {
           succeeded_at: string | null;
           manual_review_required: boolean;
           manual_review_reason: string | null;
+          admin_retry_requested_at: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -325,6 +326,7 @@ export interface Database {
           succeeded_at?: string | null;
           manual_review_required?: boolean;
           manual_review_reason?: string | null;
+          admin_retry_requested_at?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -531,6 +533,20 @@ export interface Database {
         }[];
       };
 
+      admin_request_refund_retry: {
+        Args: {
+          p_refund_id: string;
+          p_actor_user_id: string;
+          p_reason: string;
+        };
+        Returns: {
+          requested: boolean;
+          refund_id: string;
+          project_id: string;
+          admin_retry_requested_at: string;
+        }[];
+      };
+
       claim_next_refund: {
         Args: Record<PropertyKey, never>;
         Returns: {
@@ -541,6 +557,7 @@ export interface Database {
           stripe_payment_intent_id: string;
           idempotency_key: string;
           attempt_count: number;
+          admin_retry_requested_at: string | null;
         }[];
       };
 
