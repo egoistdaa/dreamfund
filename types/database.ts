@@ -561,6 +561,22 @@ export interface Database {
         }[];
       };
 
+      release_admin_refund_retry_claim: {
+        Args: {
+          p_refund_id: string;
+          p_expected_admin_retry_requested_at: string;
+          p_expected_attempt_count: number;
+          p_error: string;
+        };
+        Returns: {
+          released: boolean;
+          refund_id: string | null;
+          refund_status: RefundStatusDB | null;
+          manual_review_required: boolean | null;
+          next_retry_at: string | null;
+        }[];
+      };
+
       release_refund_claim: {
         Args: {
           p_refund_id: string;
