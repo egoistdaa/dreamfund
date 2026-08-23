@@ -4,6 +4,7 @@ import {
   type AdminRefund,
 } from "@/lib/data/adminRefunds";
 import { formatYen } from "@/lib/format";
+import { RefundManualReviewActions } from "@/components/admin/RefundManualReviewActions";
 
 export const metadata = {
   title: "返金管理 | DreamFund 管理",
@@ -294,7 +295,7 @@ export default async function AdminRefundsPage() {
             </div>
 
             <div className="overflow-x-auto">
-              <table className="min-w-[1180px] w-full text-left">
+              <table className="min-w-[1450px] w-full text-left">
                 <thead className="border-b border-slate-200 bg-slate-50">
                   <tr className="text-[11px] font-bold text-slate-500">
                     <th className="px-5 py-3">
@@ -324,6 +325,10 @@ export default async function AdminRefundsPage() {
                     <th className="px-5 py-3">
                       更新日時
                     </th>
+
+                    <th className="px-5 py-3">
+                      操作
+                    </th>
                   </tr>
                 </thead>
 
@@ -338,6 +343,30 @@ export default async function AdminRefundsPage() {
                       getSettlementStatusBadge(
                         refund.settlementStatus
                       );
+
+                    const canRequestRetry =
+                      refund.manualReviewRequired ===
+                        true &&
+                      refund.adminRetryRequestedAt ===
+                        null &&
+                      refund.refundStatus ===
+                        "approved" &&
+                      refund.attemptCount >= 5 &&
+                      refund.stripeRefundId === null &&
+                      refund.stripeStatus === null &&
+                      refund.succeededAt === null &&
+                      refund.processingStartedAt ===
+                        null &&
+                      refund.nextRetryAt === null &&
+                      refund.approvedAt !== null &&
+                      refund.pledgeStatus === "paid" &&
+                      Boolean(
+                        refund.stripePaymentIntentId
+                      ) &&
+                      refund.settlementStatus ===
+                        "manual_review" &&
+                      refund.settlementFinalStatus ===
+                        "failed";
 
                     return (
                       <tr
@@ -515,6 +544,18 @@ export default async function AdminRefundsPage() {
                           >
                             {shortenId(refund.id, 16)}
                           </div>
+                        </td>
+
+                        <td className="px-5 py-4">
+                          <RefundManualReviewActions
+                            refundId={refund.id}
+                            canRequestRetry={
+                              canRequestRetry
+                            }
+                            adminRetryRequestedAt={
+                              refund.adminRetryRequestedAt
+                            }
+                          />
                         </td>
                       </tr>
                     );

@@ -33,6 +33,7 @@ export type AdminRefund = {
 
   manualReviewRequired: boolean;
   manualReviewReason: string | null;
+  adminRetryRequestedAt: string | null;
 
   approvedAt: string | null;
   processingStartedAt: string | null;
@@ -254,6 +255,8 @@ export async function getAdminRefunds(
           refund.manual_review_required,
         manualReviewReason:
           refund.manual_review_reason,
+        adminRetryRequestedAt:
+          refund.admin_retry_requested_at,
 
         approvedAt: refund.approved_at,
         processingStartedAt:
